@@ -1,0 +1,34 @@
+# export raw counts of the top N variable genes
+topVar_num: 1000
+# exported raw counts is under ./exported_counts
+# output file names
+merged_batch:
+  raw_count: "four_batches_topVar_raw_counts.csv"
+  # labels is under ./cluster_assignments
+  label: "four_batches_labels.csv"
+  rds_suffix: "_clustered_12k.rds"
+CD45_pos:
+  raw_count: "Ptprc_pos_topVar_raw_counts.csv"
+  label: "Ptprc_pos_labels.csv"
+  rds_suffix: "_cd45_pos.rds"
+CD45_neg:
+  raw_count: "Ptprc_neg_topVar_raw_counts.csv"
+  label: "Ptprc_neg_labels.csv"
+  rds_suffix: "_cd45_neg.rds"
+
+  
+gene_patterns:
+  # Myeloid Cells
+  myeloid_cells: "^CD11b$|^ITGAM$"
+  macrophages: "^NOS2$|^cd86$|^cd80$|^ADGRE1$|^CD163$|^CD206$|^MRC1$|^ARG1$"
+  monocytes: "^CD14$|^ADGRE1$"
+  conventional_dendritic_cells: "^ITGAX$|^CD11c$|^HLADR[AB]([13])*$|^CLEC9A$|^XCR1$|^CD8A$|^ITGAE$|^CD103$|^ITGAM$|^CD11b$|^SIRPA$|^CD83$"
+  plasmacytoid_dendritic_cells: "^CD317$|^BST2$|^CD83$|^SiglecH$"
+  myeloid_derived_suppressor_cells: "^ARG1$|^CD59$|^Ly6C$|^Ly6G$"
+  granulocytes: "^ADGRE1$|^Ly6G$|^CD193$|^CCR3$|^SiglecF$|^FCGR1A$|^CD117$|^CD23$|^FCER2$"
+  # Lymphoid Cells
+  tcell: "^cd4$|^cd3e$|^cd8a$|^IL9$|^SPI1|^CXCR5|^BCL6|^IL2[12]$|^AHR$|^cd62L|^IL4$|^GATA3|^CD69$|^TBX21$|^IFNG$|^RORC$|^IL17|^FOXP3|^CD25$|^PRF1$|^GZMB$|^IL7R$|^TCF[17]$|^PDCD1$|^HAVCR2$|^TIGIT$|^TOX2*$"
+  nktcell: "^cd3e$|^NKX1.*1$|^TRAV24$"
+  nkcell: "^cd3e$|^cd69$|^NKX1.*1$|^NKp46$|^NCR1$|^NKG2D$|^Klrk1$|^GZMB$|^PRF1$"
+  bcell: "^cd19$|^CD27$|^IgHD$"
+  plasma_cell: "^TNFRSF17$|^BCMA$|^CD138$|^SDC1$"

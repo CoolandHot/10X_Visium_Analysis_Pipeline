@@ -1,0 +1,33 @@
+# Ignore all files and directories by default
+*
+!.gitignore
+!*.r
+!*.py
+!*.md
+!*.sh
+
+# Exclude config
+!config
+
+# Exclude cellType and its contents
+!cellType
+!cellType/**/*.r
+!cellType/**/*.yaml
+!cellType/**/*.sh
+
+# Exclude DGE and its contents
+!DGE
+!DGE/**/*.r
+
+!TFA
+!TFA/**/*.r
+!TFA/**/*.ipynb
+!TFA/**/*.py
+
+!spatial_clustering
+!spatial_clustering/**/*.r
+!spatial_clustering/**/*.yaml
+
+!cluster_labelling
+!cluster_labelling/**/*.r
+!cluster_labelling/**/*.yaml

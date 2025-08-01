@@ -1,0 +1,13 @@
+# export raw counts of the top N variable genes
+topVar_num: 1000
+# exported raw counts is under ./exported_counts
+# output file names
+merged_batch:
+  raw_count: "four_batches_topVar_raw_counts.csv"
+  # labels is under ./cluster_assignments
+  label: "four_batches_labels.csv"
+  rds_suffix: "_clustered_12k.rds"
+CD45_pos:
+  raw_count: "Ptprc_pos_topVar_raw_counts.csv"
+CD45_neg:
+  raw_count: "Ptprc_neg_topVar_raw_counts.csv"
