@@ -1,0 +1,194 @@
+# Cell2location Analysis Configuration for GBM Dataset
+# pred_cell2location_1_train_reference.py is only required for the first time you run the analysis.
+# It trains the reference model and saves the signatures.
+# After that, you can run pred_cell2location_2_map_spatial.py to map the spatial data.
+
+# Input/Output Paths
+paths:
+  reference_data: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/rds_data/GBM_earlyStage_scSeq_annotated_cell2location.h5ad'
+  spatial_data: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/rds_data/GBM_1st_four_merged_clustered_12k.h5ad'
+  results_folder: './cellType/gbm_analysis'
+  reference_output: './cellType/gbm_analysis/reference_signatures'
+  spatial_output: './cellType/gbm_analysis/cell2location_map'
+  cell_abundance_heatmap_path: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/output/cell_type_prediction/cell2location_results/cell_abundance_heatmap'
+  nmf_models: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/output/cell_type_prediction/cell2location_results/nmf_models'
+  nmf_analysis_path: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/output/cell_type_prediction/cell2location_results/nmf_analysis'
+  dge_results_across_sample: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/output/differential_expression/cell_type_comparisons/dge_results_across_sample'
+  dge_results_within_sample: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/output/differential_expression/cell_type_comparisons/dge_results_within_sample'
+  dge_csv_combine: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/output/differential_expression/cell_type_comparisons'
+  dge_report: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/output/html_reports/report_cellType_dge_presentations'
+  cell_population_reports: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/output/html_reports/report_cell_population'
+  nmf_reports: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/output/html_reports/report_nmf_analysis'
+
+# Dataset Configuration
+dataset:
+  # Column names in reference data
+  reference_batch_key: 'sample'
+  reference_labels_key: 'cell_type'
+  reference_covariate_keys: ['group']
+  
+  # Column names in spatial data
+  sample_batch_key: 'batch'
+  available_slices: ['RAD', 'SAL', 'COMB', 'ADI']
+  
+  
+  # Dataset splitting parameters for multi-machine training
+  splitting:
+    enable_splitting: true  # Set to false to use original subsample behavior
+    batch_size: 8000  # Number of cells per batch (should be <= max_cells)
+    split_data_dir: './cellType/gbm_analysis/split_datasets'  # Directory to save split datasets
+    overlap_cells: 500  # Number of overlapping cells between batches (0 for no overlap)
+
+  
+# Shared Analysis Configuration
+shared:
+  # Whether to combine subtypes into new cell types for DGE
+  combine_cell_types: false
+
+  # Add cell type combinations for grouping subtypes
+  cell_type_combinations:
+
+  # Available cell types for analysis, can be found in adata.uns['mod']['factor_names']
+  all_cell_types: ['Astrocytes', 'B cells', 'Ciliated cells', 'Dendritic cells', 'Endothelial cells', 'Fibroblasts', 'Macrophages', 'Mast cells', 'Microglial cells', 'Monocytes', 'NK cells', 'Neuroendocrine cells', 'Neutrophils', 'Oligodendrocyte precursor cells', 'Oligodendrocytes', 'T cells']
+  
+  # Target cell types for DGE analysis
+  target_cell_types: ['Astrocytes', 'B cells', 'Ciliated cells', 'Dendritic cells', 'Endothelial cells', 'Fibroblasts', 'Macrophages', 'Mast cells', 'Microglial cells', 'Monocytes', 'NK cells', 'Neuroendocrine cells', 'Neutrophils', 'Oligodendrocyte precursor cells', 'Oligodendrocytes', 'T cells']
+  
+  # Selected cell types for visualization
+  selected_cell_types: ['Astrocytes', 'Dendritic cells','Endothelial cells', 'Macrophages', 'Microglial cells','T cells']
+  
+  # Cross-sample comparisons
+  cross_sample_comparisons:
+    - ['ADI', 'SAL']
+    - ['COMB', 'SAL']
+    - ['RAD', 'SAL']
+    - ['COMB', 'RAD']
+  
+  # Within-sample groups
+  within_sample_groups: ['RAD', 'SAL', 'COMB', 'ADI']
+  
+  # Quantile settings
+  quantiles:
+    abundance_threshold: 0.75
+    low_quantile: 0.25
+    high_quantile: 0.75
+    vmax_quantile: 0.992  # p99.2
+  
+  # Image and presentation settings
+  image_settings:
+    dpi: 300
+    format: "png"
+    spot_size: 30
+  
+
+# Gene Filtering Parameters (Reference Data)
+gene_filtering:
+  cell_count_cutoff: 5  # Keep markers of rare cell types (recommended: 5)
+  cell_percentage_cutoff2: 0.05  # Increased from tutorial 0.03 for more stringent filtering
+  nonz_mean_cutoff: 1.2  # Increased from tutorial 1.12 for 8k-16k genes selection
+
+# Reference Model Training Parameters
+reference_model:
+  max_epochs: 300  # Increased from tutorial 250 to ensure convergence
+  batch_size: 2500  # Large batch size as recommended
+  train_size: 1.0  # Use all data
+  num_samples: 1000  # For posterior sampling
+  accelerator: 'gpu'
+  device: 1
+
+# Cell2location Model Parameters
+cell2location:
+  # CRITICAL: Adjust N_cells_per_location based on your tissue type
+  # Estimate from paired histology images (tutorial uses 30 as example)
+  N_cells_per_location: 25  # Adjusted for GBM tissue (lower than lymph node)
+  
+  # CRITICAL: Test both values - use 20 for high technical variability, 200 for low
+  detection_alpha: 20  # Start with 20 for human tissue (recommended)
+  
+  # Training parameters
+  max_epochs: 35000  # Increased from tutorial 30000
+  batch_size: null  # Use full data
+  train_size: 1.0
+  num_samples: 1000
+  accelerator: 'gpu'
+  device: 1
+  
+  # Alternative detection_alpha to test
+  detection_alpha_alternative: 200
+
+# Clustering Analysis Parameters
+clustering:
+  n_neighbors: 15  # KNN neighbors for clustering
+  leiden_resolution: 1.1  # Leiden clustering resolution
+  umap_min_dist: 0.3
+  umap_spread: 1.0
+
+# DGE Analysis Parameters
+dge_analysis:
+  use_raw_counts_cell_type_dge: false # Use adata.raw for DGE by cell type abundance
+  use_raw_counts_nmf_dge: false # Use adata.raw for DGE by NMF groups
+
+# NMF Colocalization Analysis Parameters
+nmf_analysis:
+  # CRITICAL: Tutorial recommends range 5-30
+  # small factor number: find a few most distinct cellular compartments
+  # large factor number: find very strong co-location signal and assume that most cell types don't co-locate (>30)
+  n_fact_range: [5, 35, 2] # [start, end, step]
+  n_restarts: 3  # Number of training restarts
+  alpha: 0.01  # NMF regularization
+  init: 'random'
+  tol: 0.000001  # Convergence tolerance
+  chosen_n_factors_for_dge: 5 # Number of NMF factors to use for DGE
+
+# Visualization Parameters
+visualization:
+  figure_size: [15, 10]
+  ncols: 4
+  spot_size: 1.3
+  colormap: 'magma'
+  max_cell_types_to_plot: 30
+
+# Quality Control Parameters
+quality_control:
+  plot_history_skip_epochs: 20  # Skip first N epochs in training plots
+  spatial_history_skip_epochs: 1000  # Skip first N epochs for spatial model
+
+# Advanced Parameters
+advanced:
+  # For cell-type specific expression computation (memory intensive)
+  compute_cell_type_expression: false  # Set to true if you have enough RAM
+  
+  # Posterior sampling parameters
+  posterior_quantiles: [0.05, 0.5, 0.95]  # Quantiles to compute
+  
+  # Memory optimization
+  use_quantiles_only: false  # Set to true to save memory on large datasets
+
+# Local Report Generation
+local_report:
+
+  # Cell population presentation settings
+  cell_population:
+    # keywords from adata.uns['mod']['factor_names']
+    cell_types_for_population: ['Astrocytes', 'B cells', 'Ciliated cells', 'Dendritic cells', 'Endothelial cells', 'Fibroblasts', 'Macrophages', 'Mast cells', 'Microglial cells', 'Monocytes', 'NK cells', 'Neuroendocrine cells', 'Neutrophils', 'Oligodendrocyte precursor cells', 'Oligodendrocytes', 'T cells']
+    slide_title_prefix: "Cell Population under Sample"
+    selected_pdf_pattern: "{output_dir}/{batch}_selected_cell_types.pdf"
+    all_cell_abundance_pdf_pattern: "{output_dir}/{batch}_cell_abundance_all.pdf"
+    layout_rows: 2
+    layout_cols: 3
+
+  # NMF analysis presentation settings
+  nmf_analysis:
+    # Heatmap settings
+    heatmap:
+      slide_title_prefix: "NMF Analysis Heatmap"
+      pdf_pattern: "{output_dir}/{batch}_nmf_analysis_heatmap.pdf"
+      layout_rows: 3
+      layout_cols: 2
+    
+    # Spatial density plot settings
+    spatial_density:
+      slide_title_prefix: "NMF Analysis Spatial Density"
+      pdf_pattern: "{output_dir}/{batch}_nmf_analysis_spatial_density.pdf"
+      layout_rows: 3
+      layout_cols: 2

@@ -1,0 +1,220 @@
+# Script orders: 
+# 1. 1_VisiumHD_read_merge_cluster.r
+# 2. 2_visual_clusters
+# 3. ./cellType/*
+# cell type deconvolution, we specially focus on the cell2location method, but you can also use other methods like spatialXR, etc.
+# please make sure the referencing dataset: ./rds_data/ref_GBM_scSeq.rds exists
+spaceXR_ref_rds: "/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/rds_data/GBM_earlyStage_scSeq_annotated_spacexr.rds"
+cell2location_ref_h5ad: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/cellType/gbm_analysis/reference_signatures/sc_ref.h5ad"
+# 4. ./spatial_clustering/*
+# for determining the spatial domain clusters, it's better to inspect it using `BayesSpace::qTune()` and `BayesSpace::qPlot()`
+BayesSpace_k_clusters: 14
+# 5. ./DGE/*
+# There is DGE on the inferred cell type abundance in the above Step3. here, the first two steps are for the cluster level DGE analysis on the gene expression.
+# below parameters will be used in the script
+cluster_method: "banksy_cluster_cell2location"
+Differential_Gene_Analysis:
+  outTumour_cluster_nums: [2, 6]
+  inTumour_cluster_nums: [1, 4, 5]
+  edgeTumour_cluster_nums: []
+  
+  across_batch_comparisons: # the latter one is the control group
+    - ["B7_ADI_127891", "B7_SAL_127891"]
+    - ["B7_ADI_130660", "B7_SAL_12789R1"]
+    - ["B7_ADI_130660", "B7_SAL_127891"]
+    - ["B7_ADI_127891", "B7_SAL_12789R1"]
+
+
+# 6. [optional] ./TFA/*
+# 7. [ignore] 3_wrap_analysis_to_Loupe.r
+# we abandoned this script because Loupe file format is not open-source and we can't customize it much. Instead, we directly export the clustering results to the Cell Browser format below.
+
+
+# 8. 3_cellbrowser_export_web.py
+# 9. 4_generate_reports.py
+# This script generates HTML reports for the analysis results. Report is under output/html_reports/index.html
+
+
+# -------------------
+# Data Input/Output
+# -------------------
+# Directory where your raw 10X data is stored
+raw_data_dir: "./"
+# Directory to save processed data and results
+project_dir: "./"
+# Prefix for the output files
+output_file_prefix: "DIPG_B7_expr_six_merged"
+# -------------------
+# Analysis Parameters
+# -------------------
+VisiumHD: True
+Cluster_resolution: 3
+Cluster_n_neighbors: 10
+
+# Output directory structure
+output_dirs:
+  # Core clustering outputs
+  clustering: "output/clustering/"
+  clustering_umap_spatial: "output/clustering/clusters_umap_spatial/"
+  clustering_markers: "output/clustering/markers/"
+  clustering_spatialAware: "output/clustering/spatial_aware_clustering/"
+  
+  # Cell type prediction outputs
+  cell_type: "output/cell_type_prediction/"
+  cell_type_spacexr: "output/cell_type_prediction/spaceXR_results/"
+  cell_type_cell2loc: "output/cell_type_prediction/cell2location_results/"
+  cell_type_deconv: "output/cell_type_prediction/deconvoluted_objects/"
+  cell_type_viz: "output/cell_type_prediction/visualizations/"
+  
+  # Differential expression outputs
+  deg: "output/differential_expression/"
+  deg_clusters: "output/differential_expression/cluster_comparisons/"
+  deg_celltypes: "output/differential_expression/cell_type_comparisons/"
+  deg_combine_celltypes: "output/differential_expression/combine_cell_type_comparisons/"
+  
+  pathway_analysis_clusters: "output/pathway_analysis_clusters/"
+  pathway_analysis_clusters_plots: "output/pathway_analysis_clusters/plots/"
+  pathway_analysis_celltypes: "output/pathway_analysis_celltypes/"
+  pathway_analysis_celltypes_plots: "output/pathway_analysis_celltypes/plots/"
+  pathway_analysis_combine_celltypes: "output/pathway_analysis_combine_celltypes/"
+  pathway_analysis_combine_celltypes_plots: "output/pathway_analysis_combine_celltypes/plots/"
+
+
+  # Transcription factor activity outputs
+  tfa: "output/transcription_factor_activity/"
+  tfa_activities: "output/transcription_factor_activity/TF_activities/"
+  tfa_features: "output/transcription_factor_activity/feature_importance/"
+  tfa_heatmaps: "output/transcription_factor_activity/heatmaps/"
+  
+  # Manual labelling outputs
+  manual_label: "output/manual_labelling/"
+  manual_counts: "output/manual_labelling/exported_counts/"
+  manual_assignments: "output/manual_labelling/cluster_assignments/"
+  manual_immune: "output/manual_labelling/immune_analysis/"
+  manual_markers: "output/manual_labelling/marker_analysis/"
+  
+  # 10X Loupe browser files
+  loupe: "output/loupe_files/"
+
+# Names of the batch files (directories for VisiumHD, h5 files for standard Visium)
+batch_file_names:
+  - "B7_expr/127891-R2-1"
+  - "B7_expr/12890R1-5"
+  - "B7_expr/130660-NM-5"
+  - "B7_expr/127891-L1-4"
+  - "B7_expr/12789R1-1"
+  - "B7_expr/130659-NM-1"
+  # - "C2_expr/123124L1_2"
+  # - "C2_expr/123123R1L1_1"
+batch_file_h5_names: # for non-VisiumHD
+  # - "IMP002_filtered_feature_bc_matrix.h5"
+  # - "IMP023_filtered_feature_bc_matrix.h5"
+  # - "9912-IMP031_filtered_feature_bc_matrix.h5"
+  # - "IMP028_filtered_feature_bc_matrix.h5"
+batch_names:
+# last batch name being the control group
+  - "B7_ADI_127891"
+  - "B7_ADI_12890R1"
+  - "B7_ADI_130660"
+  - "B7_SAL_127891"
+  - "B7_SAL_12789R1"
+  - "B7_SAL_130659"
+
+
+
+cellbrowser_html_output_dir: "./output/html_reports/cellbrowser"
+# Cell Browser export settings
+cellbrowser:
+  # Cluster file paths for Cell Browser export, no need to prefix ./output/
+  cluster_files:
+    banksy_cellTypes: "output/clustering/banksy_cluster_cell2location.csv"
+    banksy: "output/clustering/banksy_cluster.csv" 
+    BayesSpace: "output/clustering/BayesSpace_cluster.csv"
+    BayesSpace_cellTypes: "output/clustering/BayesSpace_cluster_cell2location.csv"
+
+  cellbrowser_dir: "output/cellbrowser_geneExpr"
+  color_field: "banksy"
+  label_field: "banksy"
+  enum_fields: ["banksy", "banksy_cellTypes", "batch"]
+  quick_genes: ["Arg1", "IDO1", "Cd45", "Cd3e", "Cd8a", "Cd4", "Foxp3", "Gfap", "Nestin", "Gfp", "Rfp", "Egfr"]
+
+  cell_abundances_dir: "output/cellbrowser_cellTypes"
+  cell_abundances_csv: "output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv"
+  color_field_cell2location: "banksy_cellTypes"
+  label_field_cell2location: "banksy_cellTypes" 
+  enum_fields_cell2location: ["banksy_cellTypes", "batch"]
+
+
+# -------------------
+# Visualization
+# -------------------
+# Color map for clusters
+color_map:
+  "0": "#59BE86"
+  "1": "#C798EE"
+  "2": "#F56867"
+  "3": "#FEB915"
+  "4": "#7495D3"
+  "5": "#D1D1D1"
+  "6": "#6D1A9C"
+  "7": "#15821E"
+  "8": "#3A84E6"
+  "9": "#997273"
+  "10": "#787878"
+  "11": "#DB4C6C"
+  "12": "#9E7A7A"
+  "13": "#554236"
+  "14": "#AF5F3C"
+  "15": "#93796C"
+  "16": "#F9BD3F"
+  "17": "#AAB370"
+  "18": "#877F6C"
+  "19": "#268785"
+  "20": "#B2D8D8"
+  "21": "#F9E4B7"
+  "22": "#A020F0"
+  "23": "#00FFFF"
+  "24": "#800080"
+  "25": "#4682B4"
+  "26": "#D2691E"
+  "27": "#008000"
+  "28": "#90EE90"
+  "29": "#FF69B4"
+  "30": "#000080"
+  "31": "#E6E6FA"
+  "32": "#708090"
+  "33": "#FA8072"
+  "34": "#9370DB"
+  "35": "#008B8B"
+  "36": "#A9A9A9"
+  "37": "#8FBC8F"
+  "38": "#BC8F8F"
+  "39": "#CD661D"
+  "40": "#EEA2AD"
+  "41": "#BDBDBD"
+  "42": "#D8BFD8"
+  "43": "#FFDAB9"
+  "44": "#F0E68C"
+  "45": "#B0E2FF"
+  "46": "#7FFFD4"
+  "47": "#F5DEB3"
+  "48": "#6495ED"
+  "49": "#DDA0DD"
+  "50": "#98FB98"
+  "51": "#F08080"
+  "52": "#20B2AA"
+  "53": "#778899"
+  "54": "#7B68EE"
+  "55": "#FF7F50"
+  "56": "#66CDAA"
+  "57": "#483D8B"
+  "58": "#FFBEDA"
+  "59": "#8B4513"
+  "60": "#A0522D"
+  "61": "#C71585"
+  "62": "#DA70D6"
+  "63": "#F0E6FA"
+  "64": "#FF6347"
+  "65": "#87CEFA"
+  "66": "#708090"
+
