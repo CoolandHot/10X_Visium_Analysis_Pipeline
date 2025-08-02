@@ -2,13 +2,13 @@
 # Data Input/Output
 # -------------------
 on_disk:
-  chunk_size: 10000
-  scaling_chunk_size: 5000
+  # chunk_size: 10000
+  # scaling_chunk_size: 5000
+  # use_zarr_cache: True
+  # integration_pca_dims: 50
+  # load_from_merge: True # Skip loading all separated datasets and load merged data from zarr cache
+  # merge_n_batches: 6 # Number of batches to merge
   max_memory_gb: 45
-  use_zarr_cache: True
-  integration_pca_dims: 50
-  load_from_merge: True # Skip loading all separated datasets and load merged data from zarr cache
-  merge_n_batches: 6 # Number of batches to merge
   qc_min_genes: 100 # Minimum number of genes expressed in a cell
   qc_min_cells: 10 # Minimum number of cells for a gene to be considered expressed
 
@@ -100,8 +100,8 @@ Differential_Gene_Analysis:
 # Analysis Parameters
 # -------------------
 VisiumHD: True
-Cluster_resolution: 3
-Cluster_n_neighbors: 10
+Cluster_resolution: 2
+Cluster_n_neighbors: 20
 
 # Output directory structure
 output_dirs:

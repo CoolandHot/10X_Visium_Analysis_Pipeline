@@ -11,6 +11,7 @@ podman run --rm -it \
     container-registry.surrey.ac.uk/shared-containers/bioinformatics-r-seurat-5-for-transcription-factor-analysis
 
 
+
 apptainer exec --nv --bind /usr/lib/locale:/usr/lib/locale --bind /vol/research/brainTumorST:/vol/research/brainTumorST --bind /vol/research/scratch1/NOBACKUP/hh01116/:/vol/research/scratch1/NOBACKUP/hh01116/ --bind /scratch/hh01116/:/scratch/hh01116/ --env R_LIBS_USER="" --env R_ENVIRON_USER="" \
     /vol/research/scratch1/NOBACKUP/hh01116/docker_imgs/R_seurat5_with_pkgs.sif bash
 
@@ -21,11 +22,11 @@ apptainer exec --nv --bind /usr/lib/locale:/usr/lib/locale --bind /vol/research/
 
 
 export TMPDIR=/scratch/hh01116/tmpdir && \
-apptainer pull ../docker_imgs/R_seurat5_with_pkgs.sif \
+apptainer pull $VOL_NOBACKUP/docker_imgs/R_seurat5_with_pkgs.sif \
     docker://container-registry.surrey.ac.uk/shared-containers/bioinformatics-r-seurat5-with-recommended-pkgs:latest
 
 export TMPDIR=/scratch/hh01116/tmpdir && \
-    apptainer pull ../docker_imgs/cell2location.sif \
+    apptainer pull $VOL_NOBACKUP/docker_imgs/cell2location.sif \
     oras://container-registry.surrey.ac.uk/shared-containers/apptainer-bioinformatics-cell2location
 
 
