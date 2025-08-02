@@ -22,8 +22,8 @@ cell2location_h5ad <- config$cell2location_h5ad
 spaceXR_ref_rds <- config$spaceXR_ref_rds
 
 VisiumHD <- config$VisiumHD
-Cluster_resolution <- config$Cluster_resolution
-Cluster_n_neighbors <- config$Cluster_n_neighbors
+Cluster_resolution <- on_disk$Cluster_resolution
+Cluster_n_neighbors <- on_disk$Cluster_n_neighbors
 
 
 outTumour_cluster_nums_vector <- config$Differential_Gene_Analysis$outTumour_cluster_nums

@@ -1,21 +1,18 @@
 # -------------------
 # Data Input/Output
 # -------------------
+VisiumHD: False
 on_disk:
-  chunk_size: 10000
-  scaling_chunk_size: 5000
+  Cluster_resolution: 2
+  Cluster_n_neighbors: 20
   max_memory_gb: 45
-  use_zarr_cache: True
-  integration_pca_dims: 50
-  load_from_merge: True # Skip loading all separated datasets and load merged data from zarr cache
-  merge_n_batches: 6 # Number of batches to merge
   qc_min_genes: 100 # Minimum number of genes expressed in a cell
   qc_min_cells: 10 # Minimum number of cells for a gene to be considered expressed
 
 # Directory where your raw 10X data is stored
 raw_data_dir: "/vol/research/brainTumorST/gbm_data/raw_data/"
 # Directory to save RDS files
-rds_data_dir: "/scratch/hh01116/10X_KD/rds_data/"
+rds_data_dir: "/scratch/hh01116/10X_KD/Jake_rds_data/"
 # Directory to save processed data and results
 project_dir: "/scratch/hh01116/10X_KD/"
 # Prefix for the output files
@@ -79,75 +76,69 @@ Differential_Gene_Analysis:
 # Base output directory for all results
 output_dirs:
   # Core clustering outputs
-  clustering: "output/clustering/"
-  clustering_umap_spatial: "output/clustering/clusters_umap_spatial/"
-  clustering_markers: "output/clustering/markers/"
-  clustering_spatialAware: "output/clustering/spatial_aware_clustering/"
+  clustering: "Jake_output/clustering/"
+  clustering_umap_spatial: "Jake_output/clustering/clusters_umap_spatial/"
+  clustering_markers: "Jake_output/clustering/markers/"
+  clustering_spatialAware: "Jake_output/clustering/spatial_aware_clustering/"
   
   # Cell type prediction outputs
-  cell_type: "output/cell_type_prediction/"
-  cell_type_spacexr: "output/cell_type_prediction/spaceXR_results/"
-  cell_type_cell2loc: "output/cell_type_prediction/cell2location_results/"
-  cell_type_deconv: "output/cell_type_prediction/deconvoluted_objects/"
-  cell_type_viz: "output/cell_type_prediction/visualizations/"
+  cell_type: "Jake_output/cell_type_prediction/"
+  cell_type_spacexr: "Jake_output/cell_type_prediction/spaceXR_results/"
+  cell_type_cell2loc: "Jake_output/cell_type_prediction/cell2location_results/"
+  cell_type_deconv: "Jake_output/cell_type_prediction/deconvoluted_objects/"
+  cell_type_viz: "Jake_output/cell_type_prediction/visualizations/"
 
   # Differential expression outputs
-  deg: "output/differential_expression/"
-  deg_clusters: "output/differential_expression/cluster_comparisons/"
-  deg_celltypes: "output/differential_expression/cell_type_comparisons/"
-  deg_combine_celltypes: "output/differential_expression/combine_cell_type_comparisons/"
+  deg: "Jake_output/differential_expression/"
+  deg_clusters: "Jake_output/differential_expression/cluster_comparisons/"
+  deg_celltypes: "Jake_output/differential_expression/cell_type_comparisons/"
+  deg_combine_celltypes: "Jake_output/differential_expression/combine_cell_type_comparisons/"
   
-  pathway_analysis_clusters: "output/pathway_analysis_clusters/"
-  pathway_analysis_clusters_plots: "output/pathway_analysis_clusters/plots/"
-  pathway_analysis_celltypes: "output/pathway_analysis_celltypes/"
-  pathway_analysis_celltypes_plots: "output/pathway_analysis_celltypes/plots/"
-  pathway_analysis_combine_celltypes: "output/pathway_analysis_combine_celltypes/"
-  pathway_analysis_combine_celltypes_plots: "output/pathway_analysis_combine_celltypes/plots/"
+  pathway_analysis_clusters: "Jake_output/pathway_analysis_clusters/"
+  pathway_analysis_clusters_plots: "Jake_output/pathway_analysis_clusters/plots/"
+  pathway_analysis_celltypes: "Jake_output/pathway_analysis_celltypes/"
+  pathway_analysis_celltypes_plots: "Jake_output/pathway_analysis_celltypes/plots/"
+  pathway_analysis_combine_celltypes: "Jake_output/pathway_analysis_combine_celltypes/"
+  pathway_analysis_combine_celltypes_plots: "Jake_output/pathway_analysis_combine_celltypes/plots/"
 
   # Transcription factor activity outputs
-  tfa: "output/transcription_factor_activity/"
-  tfa_activities: "output/transcription_factor_activity/TF_activities/"
-  tfa_features: "output/transcription_factor_activity/feature_importance/"
-  tfa_heatmaps: "output/transcription_factor_activity/heatmaps/"
+  tfa: "Jake_output/transcription_factor_activity/"
+  tfa_activities: "Jake_output/transcription_factor_activity/TF_activities/"
+  tfa_features: "Jake_output/transcription_factor_activity/feature_importance/"
+  tfa_heatmaps: "Jake_output/transcription_factor_activity/heatmaps/"
 
   # Manual labelling outputs
-  manual_label: "output/manual_labelling/"
-  manual_counts: "output/manual_labelling/exported_counts/"
-  manual_assignments: "output/manual_labelling/cluster_assignments/"
-  manual_immune: "output/manual_labelling/immune_analysis/"
-  manual_markers: "output/manual_labelling/marker_analysis/"
+  manual_label: "Jake_output/manual_labelling/"
+  manual_counts: "Jake_output/manual_labelling/exported_counts/"
+  manual_assignments: "Jake_output/manual_labelling/cluster_assignments/"
+  manual_immune: "Jake_output/manual_labelling/immune_analysis/"
+  manual_markers: "Jake_output/manual_labelling/marker_analysis/"
 
   # 10X Loupe browser outputs
-  loupe: "output/loupe_files/"
+  loupe: "Jake_output/loupe_files/"
 
-cellbrowser_html_output_dir: "./output/html_reports/cellbrowser"
+cellbrowser_html_output_dir: "Jake_output/html_reports/cellbrowser"
 # Cell Browser export settings
 cellbrowser:
   # Cluster file paths for Cell Browser export
   cluster_files:
-    banksy_cellTypes: "output/clustering/banksy_cluster_cell2location.csv"
-    banksy: "output/clustering/banksy_cluster.csv" 
-    BayesSpace: "output/clustering/BayesSpace_cluster.csv"
-    BayesSpace_cellTypes: "output/clustering/BayesSpace_cluster_cell2location.csv"
+    banksy_cellTypes: "Jake_output/clustering/banksy_cluster_cell2location.csv"
+    banksy: "Jake_output/clustering/banksy_cluster.csv" 
+    BayesSpace: "Jake_output/clustering/BayesSpace_cluster.csv"
+    BayesSpace_cellTypes: "Jake_output/clustering/BayesSpace_cluster_cell2location.csv"
 
-  cellbrowser_dir: "output/cellbrowser_geneExpr"
+  cellbrowser_dir: "Jake_output/cellbrowser_geneExpr"
   color_field: "banksy_cellTypes"
   label_field: "banksy_cellTypes"
   enum_fields: ["banksy_cellTypes","banksy", "batch", "BayesSpace", "BayesSpace_cellTypes"]
   quick_genes: ["CD3", "CD4", "CD8a", "CD20", "CD11c", "HLA-DR", "CD68", "CD163", "P2Y12", "CD16", "CD14", "CD94", "MPO", "SOX2", "SOX9", "FOXP3", "CD117", "OLIG2", "PanCK", "PMEL", "CD31", "Claudin-5", "CD45", "MelanA", "Ki67", "CC3", "GFAP", "OX40L", "MMP9", "pERK", "pSTAT3", "HIF1a", "CD206", "CD39", "CD40", "CIRBP", "191Ir", "193Ir", "M-CSF-R", "GM-CSF-R", "PD-L1","PD-1", "CTLA-4", "Arg1", "IDO1", "Cd3e", "Nestin", "Olig1", "Sox11", "Pdgfra"]
 
-  cell_abundances_dir: "output/cellbrowser_cellTypes"
-  cell_abundances_csv: "output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv"
+  cell_abundances_dir: "Jake_output/cellbrowser_cellTypes"
+  cell_abundances_csv: "Jake_output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv"
   color_field_cell2location: "banksy_cellTypes"
   label_field_cell2location: "banksy_cellTypes" 
   enum_fields_cell2location: ["banksy_cellTypes", "batch", "BayesSpace_cellTypes"]
 
-# -------------------
-# Analysis Parameters
-# -------------------
-VisiumHD: False
-Cluster_resolution: 3
-Cluster_n_neighbors: 10
 
 # -------------------
 # Visualization

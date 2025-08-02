@@ -339,20 +339,38 @@ merged_obj <- RunUMAP(
 # saveRDS(integration_results, paste0(rds_data_dir, output.file.prefix, "_umap_clusters.rds"))
 # DimPlot(merged_obj, label = T, label.size = 3, reduction = "umap", group.by = "seurat_clusters", alpha = 0.1) + NoLegend()
 
-message("=== Projecting Data (On-Disk) ===")
-merged_obj <- ProjectData(
-    object = merged_obj,
-    assay = assay_name,
-    full.reduction = "pca.full",
-    sketched.assay = "sketch",
-    sketched.reduction = ifelse(VisiumHD, "sketch_integrated.rpca", "integrated.rpca"),
-    umap.model = "umap",
-    dims = 1:30,
-    refdata = list(seurat_cluster_full = "seurat_clusters")
-)
-# DimPlot(merged_obj, label = T, label.size = 3, reduction = "full.umap", group.by = "seurat_cluster_full", alpha = 0.1) + NoLegend()
+if (VisiumHD) {
+    message("=== Projecting Data (On-Disk) ===")
+    merged_obj <- ProjectData(
+        object = merged_obj,
+        assay = assay_name,
+        full.reduction = "pca.full",
+        sketched.assay = "sketch",
+        sketched.reduction = ifelse(VisiumHD, "sketch_integrated.rpca", "integrated.rpca"),
+        umap.model = "umap",
+        dims = 1:30,
+        refdata = list(seurat_cluster_full = "seurat_clusters")
+    )
 
-saveRDS(merged_obj, paste0(rds_data_dir, output.file.prefix, "_merged_clustered.rds"))
+    # DimPlot(merged_obj, label = T, label.size = 3, reduction = "full.umap", group.by = "seurat_cluster_full", alpha = 0.1) + NoLegend()
+
+    format(object.size(merged_obj), units = "Gb") |>
+        message("Merged object size: ")
+
+    # Examine the size of each reduction slot
+    for (red_name in names(merged_obj@reductions)) {
+        red_obj <- merged_obj@reductions[[red_name]]
+        msg <- paste0("Reduction '", red_name, "' size: ", format(object.size(red_obj), units = "Mb"))
+        message(msg)
+    }
+    for (meta_name in names(merged_obj@meta.data)) {
+        meta_col <- merged_obj@meta.data[[meta_name]]
+        msg <- paste0("Meta.data column '", meta_name, "' size: ", format(object.size(meta_col), units = "Mb"))
+        message(msg)
+    }
+
+    saveRDS(merged_obj, paste0(rds_data_dir, output.file.prefix, "_merged_clustered.rds"))
+}
 
 message("=== Cleaning Up ===")
 rm(merged_obj)

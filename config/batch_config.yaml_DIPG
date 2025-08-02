@@ -1,3 +1,15 @@
+# -------------------
+# Data Input/Output
+# -------------------
+VisiumHD: True
+on_disk:
+  Cluster_resolution: 2
+  Cluster_n_neighbors: 20
+  max_memory_gb: 45
+  qc_min_genes: 100 # Minimum number of genes expressed in a cell
+  qc_min_cells: 10 # Minimum number of cells for a gene to be considered expressed
+
+
 # Script orders: 
 # 1. 1_VisiumHD_read_merge_cluster.r
 # 2. 2_visual_clusters
@@ -44,12 +56,7 @@ raw_data_dir: "./"
 project_dir: "./"
 # Prefix for the output files
 output_file_prefix: "DIPG_B7_expr_six_merged"
-# -------------------
-# Analysis Parameters
-# -------------------
-VisiumHD: True
-Cluster_resolution: 3
-Cluster_n_neighbors: 10
+
 
 # Output directory structure
 output_dirs:
