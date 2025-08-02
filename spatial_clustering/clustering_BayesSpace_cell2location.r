@@ -12,7 +12,7 @@ cell2loc_data <- read.csv(paste0(project_dir, "output/cell_type_prediction/cell2
 )
 
 # Read original merged object to extract spatial coordinates
-merged_obj_original <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, "_clustered_12k.rds"))
+merged_obj_original <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged.rds"))
 
 # extract the `batch` column if it exists
 if ("batch" %in% colnames(cell2loc_data)) {

@@ -3,9 +3,9 @@ source("util_headers.r")
 temp_dir <- paste0(project_dir, "rds_data/temp_", output.file.prefix, "/")
 image_name_remove_regex <- ifelse(VisiumHD, "_slice\\.008um$", "_slice$")
 
-ann_output_file <- paste0(project_dir, "rds_data/", output.file.prefix, "_clustered_12k.h5ad")
+ann_output_file <- paste0(project_dir, "rds_data/", output.file.prefix, "_merged.h5ad")
 
-merged_obj <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, "_clustered_12k.rds"))
+merged_obj <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged.rds"))
 
 
 # Create temporary directory for intermediate files
@@ -153,8 +153,8 @@ saveRDS(list(
 # ========== CONVERT TO ANNDATA AND CLEAR MEMORY ==========
 
 # Convert to AnnData
-# scCustomize::as.anndata(x = merged_obj, file_path = "/scratch/hh01116/download", file_name = "DIPG_B7_expr_six_merged_clustered_12k.h5ad")
-scCustomize::as.anndata(x = merged_obj, file_path = paste0(project_dir, "rds_data/"), file_name = paste0(output.file.prefix, "_clustered_12k.h5ad"))
+# scCustomize::as.anndata(x = merged_obj, file_path = "/scratch/hh01116/download", file_name = "DIPG_B7_expr_six_merged_merged.h5ad")
+scCustomize::as.anndata(x = merged_obj, file_path = paste0(project_dir, "rds_data/"), file_name = paste0(output.file.prefix, "_merged.h5ad"))
 
 # Clear merged_obj from memory
 rm(merged_obj)

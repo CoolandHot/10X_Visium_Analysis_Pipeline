@@ -58,7 +58,7 @@ class DGEAnalyzer:
     def load_data(self):
         """Load and prepare the AnnData object"""
         print("Loading data...")
-        h5ad_path = f"{self.project_dir}rds_data/{self.output_file_prefix}_clustered_12k.h5ad"
+        h5ad_path = f"{self.project_dir}rds_data/{self.output_file_prefix}_merged.h5ad"
         self.adata = sc.read_h5ad(h5ad_path)
         
         # Validate cluster method

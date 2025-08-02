@@ -6,7 +6,7 @@ merged_batch:
   raw_count: "four_batches_topVar_raw_counts.csv"
   # labels is under ./cluster_assignments
   label: "four_batches_labels.csv"
-  rds_suffix: "_clustered_12k.rds"
+  rds_suffix: "_merged.rds"
 CD45_pos:
   raw_count: "Ptprc_pos_topVar_raw_counts.csv"
   label: "Ptprc_pos_labels.csv"

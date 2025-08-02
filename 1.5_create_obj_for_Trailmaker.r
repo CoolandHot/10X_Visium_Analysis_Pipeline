@@ -1,10 +1,23 @@
 source("util_headers.r")
 
-# Load the first chunk as merged_obj (following the new chunked approach)
-merged_obj <- paste0(project_dir, "rds_data/", output.file.prefix, "_chunk_", 1, "_merged.rds") |>
-    readRDS()
-integration_results <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, "_umap_clusters.rds"))
-merged_obj <- add_results_to_chunk(merged_obj, integration_results)
+merged_obj <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged.rds"))
+# Validate cluster method and load if necessary
+if (cluster_method %in% colnames(merged_obj@meta.data)) {
+    valid_cluster_method <- cluster_method
+} else {
+    # Load cluster assignments from CSV file
+    cluster_csv_path <- paste0(output_dirs$clustering, cluster_method, ".csv")
+    if (file.exists(cluster_csv_path)) {
+        cluster_data <- read.csv(cluster_csv_path, row.names = 1)
+        cluster_vec <- setNames(cluster_data[[1]], rownames(cluster_data))
+        merged_obj@meta.data[[cluster_method]] <- cluster_vec[rownames(merged_obj@meta.data)]
+        valid_cluster_method <- cluster_method
+    } else {
+        stop(paste("Cluster method", cluster_method, "not found in metadata or CSV."))
+    }
+}
+
+Idents(merged_obj) <- valid_cluster_method
 
 # Control variable: TRUE for spatial coordinates, FALSE for existing reductions
 use_spatial_coords <- TRUE

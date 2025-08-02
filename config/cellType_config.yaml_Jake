@@ -6,7 +6,7 @@
 # Input/Output Paths
 paths:
   reference_data: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/rds_data/GBM_earlyStage_scSeq_annotated_cell2location.h5ad'
-  spatial_data: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/rds_data/GBM_1st_four_merged_clustered_12k.h5ad'
+  spatial_data: '/vol/research/scratch1/NOBACKUP/hh01116/Jake_project/rds_data/GBM_1st_four_merged_merged.h5ad'
   results_folder: './cellType/gbm_analysis'
   reference_output: './cellType/gbm_analysis/reference_signatures'
   spatial_output: './cellType/gbm_analysis/cell2location_map'

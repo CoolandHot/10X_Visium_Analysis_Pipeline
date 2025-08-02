@@ -15,7 +15,7 @@ batch_names <- config$batch_names
 output.file.prefix <- config$output_file_prefix
 VisiumHD <- config$VisiumHD
 
-merged_obj <- readRDS(paste0(raw.data.dir, "rds_data/", output.file.prefix, "_clustered_12k.rds"))
+merged_obj <- readRDS(paste0(raw.data.dir, "rds_data/", output.file.prefix, "_merged.rds"))
 merged_obj_list <- SplitObject(merged_obj, split.by = "batch")
 
 for (batch_id in batch_names) {

@@ -6,7 +6,7 @@
 # Input/Output Paths
 paths:
   reference_data: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/cellType/gbm_analysis/reference_signatures/sc_ref.h5ad'
-  spatial_data: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/rds_data/DIPG_B7_expr_six_merged_clustered_12k.h5ad'
+  spatial_data: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/rds_data/DIPG_B7_expr_six_merged_merged.h5ad'
   results_folder: './gbm_analysis'
   reference_output: './gbm_analysis/reference_signatures'
   spatial_output: './gbm_analysis/cell2location_map'

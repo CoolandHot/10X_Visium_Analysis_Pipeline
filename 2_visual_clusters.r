@@ -1,11 +1,6 @@
 source("util_headers.r")
 
-# Load the first chunk as merged_obj (following the new chunked approach)
-merged_obj <- paste0(project_dir, "rds_data/", output.file.prefix, "_chunk_", 1, "_merged.rds") |>
-    readRDS()
-integration_results <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, "_umap_clusters.rds"))
-merged_obj <- add_results_to_chunk(merged_obj, integration_results)
-
+merged_obj <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged_clustered.rds"))
 
 # ===========================================
 #      visualization of all cells clustering

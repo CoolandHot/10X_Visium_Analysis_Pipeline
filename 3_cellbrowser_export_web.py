@@ -258,11 +258,11 @@ class CellBrowserExporter:
         # Look for common h5ad file patterns
         possible_paths = [
             Path("./rds_data")
-            / f"{self.config['output_file_prefix']}_clustered_12k.h5ad",
+            / f"{self.config['output_file_prefix']}_merged.h5ad",
             Path("./rds_data")
-            / f"{self.config['output_file_prefix']}_banksy_clustered_12k.h5ad",
+            / f"{self.config['output_file_prefix']}_banksy_merged.h5ad",
             Path("./rds_data")
-            / f"{self.config['output_file_prefix']}_BayesSpace_clustered_12k.h5ad",
+            / f"{self.config['output_file_prefix']}_BayesSpace_merged.h5ad",
         ]
 
         for path in possible_paths:

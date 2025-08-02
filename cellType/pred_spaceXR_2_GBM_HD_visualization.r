@@ -1,7 +1,7 @@
 source("util_headers.r")
 
 
-merged_obj <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, "_clustered_12k.rds"))
+merged_obj <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged.rds"))
 
 # ===========================================
 # load cell type prediction results

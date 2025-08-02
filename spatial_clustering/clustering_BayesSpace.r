@@ -6,7 +6,7 @@
 source("util_headers.r")
 source(paste0(project_dir, "cluster_labelling/cluster_labelling_utils.r"))
 
-merged_obj <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, "_clustered_12k.rds"))
+merged_obj <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged.rds"))
 
 merged_obj_diet <- DietSeurat(merged_obj,
     assays = ifelse(VisiumHD, "sketch", "Spatial"),

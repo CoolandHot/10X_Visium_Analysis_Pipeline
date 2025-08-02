@@ -25,7 +25,7 @@ if (na_count > 0 || nan_count > 0 || null_count > 0) {
 }
 
 # Read original merged object to extract spatial coordinates
-merged_obj_original <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, "_clustered_12k.rds"))
+merged_obj_original <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged.rds"))
 
 # extract the `batch` column if it exists
 if ("batch" %in% colnames(cell2loc_data)) {
