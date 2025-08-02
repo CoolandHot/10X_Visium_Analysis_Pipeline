@@ -43,3 +43,5 @@ find . -type f \( -name "*.r" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml"
     ssh otter47 "mkdir -p \"$dest_dir\""
     scp "{}" "otter47:$dest_dir/"
 ' \;
+
+

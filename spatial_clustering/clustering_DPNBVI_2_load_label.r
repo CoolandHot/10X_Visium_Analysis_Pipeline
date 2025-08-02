@@ -6,7 +6,7 @@ csv_filenames <- yaml::read_yaml(paste0(project_dir, "spatial_clustering", "/", 
 
 
 merged_obj <- readRDS(paste0(
-    project_dir, "rds_data/",
+    rds_data_dir,
     output.file.prefix,
     csv_filenames$merged_batch$rds_suffix
 ))
@@ -67,7 +67,7 @@ Ptprc_pos$cd45_pos_clusters_ext <- cluster_labelling_env$load_inferred_labels(
     Ptprc_pos
 )
 Ptprc_pos <- run_dim_reduction(Ptprc_pos, "cd45_pos_umap")
-saveRDS(Ptprc_pos, paste0(project_dir, "rds_data/", output.file.prefix, csv_filenames$CD45_pos$rds_suffix))
+saveRDS(Ptprc_pos, paste0(rds_data_dir, output.file.prefix, csv_filenames$CD45_pos$rds_suffix))
 
 Ptprc_neg$cd45_neg_clusters_ext <- cluster_labelling_env$load_inferred_labels(
     paste0(output_dirs$manual_assignments, csv_filenames$CD45_neg$label),
@@ -75,4 +75,4 @@ Ptprc_neg$cd45_neg_clusters_ext <- cluster_labelling_env$load_inferred_labels(
     Ptprc_neg
 )
 Ptprc_neg <- run_dim_reduction(Ptprc_neg, "cd45_neg_umap")
-saveRDS(Ptprc_neg, paste0(project_dir, "rds_data/", output.file.prefix, csv_filenames$CD45_neg$rds_suffix))
+saveRDS(Ptprc_neg, paste0(rds_data_dir, output.file.prefix, csv_filenames$CD45_neg$rds_suffix))

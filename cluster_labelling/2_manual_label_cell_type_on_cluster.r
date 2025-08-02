@@ -21,8 +21,8 @@ clusters_ext <- cluster_labelling_env$load_inferred_labels(
 )
 merged_obj$clusters_ext <- clusters_ext
 
-Ptprc_neg <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, csv_filenames$CD45_neg$rds_suffix))
-Ptprc_pos <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, csv_filenames$CD45_pos$rds_suffix))
+Ptprc_neg <- readRDS(paste0(rds_data_dir, output.file.prefix, csv_filenames$CD45_neg$rds_suffix))
+Ptprc_pos <- readRDS(paste0(rds_data_dir, output.file.prefix, csv_filenames$CD45_pos$rds_suffix))
 
 
 
@@ -98,8 +98,8 @@ cluster_labelling_env$plot_spatial_clusters_with_cell_percentage(merged_obj,
 
 
 # ===========================================
-Ptprc_neg <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, csv_filenames$CD45_neg$rds_suffix))
-Ptprc_pos <- readRDS(paste0(project_dir, "rds_data/", output.file.prefix, csv_filenames$CD45_pos$rds_suffix))
+Ptprc_neg <- readRDS(paste0(rds_data_dir, output.file.prefix, csv_filenames$CD45_neg$rds_suffix))
+Ptprc_pos <- readRDS(paste0(rds_data_dir, output.file.prefix, csv_filenames$CD45_pos$rds_suffix))
 Seurat::Idents(Ptprc_neg) <- "cd45_neg_clusters_ext"
 Seurat::Idents(Ptprc_pos) <- "cd45_pos_clusters_ext"
 # ===========================================

@@ -29,7 +29,7 @@ nUMI <- colSums(sc_count)
 names(nUMI) <- colnames(sc_count)
 
 reference <- spacexr::Reference(sc_count, cell_type, nUMI)
-saveRDS(reference, paste0(project_dir, "rds_data/", "ref_GBM_scSeq.rds"))
+saveRDS(reference, paste0(rds_data_dir, "ref_GBM_scSeq.rds"))
 
 
 # ===================================
@@ -39,22 +39,22 @@ saveRDS(reference, paste0(project_dir, "rds_data/", "ref_GBM_scSeq.rds"))
 
 # BiocManager::install("zellkonverter", dependencies = TRUE)
 sce_obj <- Seurat::as.SingleCellExperiment(scRNA_early)
-zellkonverter::writeH5AD(sce_obj, paste0(project_dir, "rds_data/", "ref_GBM_scSeq.h5ad"))
+zellkonverter::writeH5AD(sce_obj, paste0(rds_data_dir, "ref_GBM_scSeq.h5ad"))
 
 
 # # Manual export approach if the above doesn't work
 # counts_matrix <- GetAssayData(scRNA_early, layer = "counts", assay = "RNA")
 # metadata <- scRNA_early@meta.data
 # # Export to files
-# write.csv(as.matrix(counts_matrix), paste0(project_dir, "rds_data/", "GBM_counts.csv"))
-# write.csv(metadata, paste0(project_dir, "rds_data/", "GBM_metadata.csv"), row.names = TRUE)
+# write.csv(as.matrix(counts_matrix), paste0(rds_data_dir, "GBM_counts.csv"))
+# write.csv(metadata, paste0(rds_data_dir, "GBM_metadata.csv"), row.names = TRUE)
 # # Create gene information
 # genes_df <- data.frame(
 #     gene_ids = rownames(counts_matrix),
 #     gene_symbols = rownames(counts_matrix),
 #     row.names = rownames(counts_matrix)
 # )
-# write.csv(genes_df, paste0(project_dir, "rds_data/", "GBM_genes.csv"), row.names = TRUE)
+# write.csv(genes_df, paste0(rds_data_dir, "GBM_genes.csv"), row.names = TRUE)
 # cat("Files exported successfully:\n")
 # cat("- GBM_counts.csv\n")
 # cat("- GBM_metadata.csv\n")

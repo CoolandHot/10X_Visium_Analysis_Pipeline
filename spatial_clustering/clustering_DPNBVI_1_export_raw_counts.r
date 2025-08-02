@@ -6,7 +6,7 @@ csv_filenames <- yaml::read_yaml(paste0(project_dir, "spatial_clustering", "/", 
 
 
 merged_obj <- readRDS(paste0(
-    project_dir, "rds_data/",
+    rds_data_dir,
     output.file.prefix,
     csv_filenames$merged_batch$rds_suffix
 ))

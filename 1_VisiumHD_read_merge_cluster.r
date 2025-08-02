@@ -12,7 +12,7 @@ lapply(output_dirs, function(dir) dir.create(dir, recursive = TRUE, showWarnings
 
 options(future.globals.maxSize = 45 * 1024^3) # 45GB
 
-dir.create(paste0(project_dir, "rds_data/"), recursive = TRUE)
+dir.create(paste0(rds_data_dir), recursive = TRUE)
 
 
 # ===========================================
@@ -37,7 +37,7 @@ for (i in seq_along(batch_file_names)) {
         )
     }
     gbm_subset[["batch"]] <- prefix
-    saveRDS(gbm_subset, paste0(project_dir, "rds_data/", prefix, "_raw.rds"))
+    saveRDS(gbm_subset, paste0(rds_data_dir, prefix, "_raw.rds"))
 }
 
 # ===========================================
@@ -47,7 +47,7 @@ brain_data_list <- list()
 
 for (i in seq_along(batch_file_names)) {
     prefix <- batch_names[i]
-    gbm_subset <- readRDS(paste0(project_dir, "rds_data/", prefix, "_raw.rds"))
+    gbm_subset <- readRDS(paste0(rds_data_dir, prefix, "_raw.rds"))
     colnames(gbm_subset) <- paste0(prefix, "_", colnames(gbm_subset))
     gbm_subset@meta.data$orig.ident <- gbm_subset@meta.data$batch
 
@@ -135,7 +135,7 @@ merged_obj <- FindNeighbors(
         reduction = ifelse(VisiumHD, "sketch_integrated.rpca", "integrated.rpca"), n.components = 3
     )
 
-saveRDS(merged_obj, paste0(project_dir, "rds_data/", "tmp.rds"))
+saveRDS(merged_obj, paste0(rds_data_dir, "tmp.rds"))
 # Remove all variables except some
 rm(list = setdiff(ls(), c("merged_obj", "VisiumHD", "project_dir", "output.file.prefix")))
 # Run garbage collection to free up memory
@@ -146,7 +146,7 @@ cat("Done the first preprocessing and clustering\n")
 cat("Now proceed to projecting data which requires huge memory\n")
 cat("If it's killed, please manually run from the below commands.\n")
 cat("===========================================\n")
-# merged_obj <- readRDS(paste0(project_dir, "rds_data/", "tmp.rds"))
+# merged_obj <- readRDS(paste0(rds_data_dir, "tmp.rds"))
 
 # ===========================================
 #           Project Data
@@ -172,10 +172,10 @@ if (VisiumHD) {
 #       .default = as.character(cell_region_cluster)
 #     ) |> as.factor()
 
-saveRDS(merged_obj, paste0(project_dir, "rds_data/", output.file.prefix, "_clustered_12k.rds"))
+saveRDS(merged_obj, paste0(rds_data_dir, output.file.prefix, "_clustered_12k.rds"))
 # str(merged_obj_list[['SAL']]) |> capture.output() |>writeLines(con=paste0(project_dir,"rds_data/",  "two_merged_clustered_12k_SAL.txt"))
 
-file.remove(paste0(project_dir, "rds_data/", "tmp.rds"))
+file.remove(paste0(rds_data_dir, "tmp.rds"))
 
 cat("===========================================\n")
 cat("Done preprocessing and clustering\n")

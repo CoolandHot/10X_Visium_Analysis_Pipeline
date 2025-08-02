@@ -1,9 +1,9 @@
 source("util_headers.r")
 
-temp_dir <- paste0(project_dir, "rds_data/temp_", output.file.prefix, "/")
+temp_dir <- paste0(rds_data_dir, "temp_", output.file.prefix, "/")
 image_name_remove_regex <- ifelse(VisiumHD, "_slice\\.008um$", "_slice$")
 
-ann_output_file <- paste0(project_dir, "rds_data/", output.file.prefix, "_merged.h5ad")
+ann_output_file <- paste0(rds_data_dir, output.file.prefix, "_merged.h5ad")
 
 merged_obj <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged.rds"))
 
@@ -51,6 +51,16 @@ keep_barcodes <- unlist(lapply(keep_imgs, function(img) {
 keep_barcodes <- intersect(keep_barcodes, colnames(merged_obj@assays[[1]]))
 merged_obj <- subset(merged_obj, cells = keep_barcodes)
 
+# convert BPCells matrix to sparse matrix
+if (merged_obj@assays[[ifelse(VisiumHD, "sketch", "Spatial")]]@layers$counts |> inherits("RenameDims")) {
+  merged_obj@assays[[ifelse(VisiumHD, "sketch", "Spatial")]]@layers$counts <- merged_obj@assays[[ifelse(VisiumHD, "sketch", "Spatial")]]@layers$counts@matrix |> as("dgCMatrix")
+}
+if (merged_obj@assays[[ifelse(VisiumHD, "sketch", "Spatial")]]@layers$data |> inherits("RenameDims")) {
+  merged_obj@assays[[ifelse(VisiumHD, "sketch", "Spatial")]]@layers$data <- merged_obj@assays[[ifelse(VisiumHD, "sketch", "Spatial")]]@layers$data@matrix |> as("dgCMatrix")
+}
+
+
+
 # ========== EXTRACT AND SAVE ALL NECESSARY INFORMATION ==========
 
 # 1. Extract and save spatial coordinates
@@ -81,7 +91,7 @@ saveRDS(library_ids, paste0(temp_dir, "library_ids.rds"))
 # config$batch_file_names <- paste0("/vol/research/brainTumorST/gbm_data/raw_data/", config$batch_file_names)
 hires_images <- lapply(config$batch_file_names, function(batch_file_name) {
   Read10X_Image(
-    paste0(batch_file_name, ifelse(VisiumHD, "/outs/binned_outputs/square_008um/spatial", "/spatial")),
+    paste0(raw_data_dir, batch_file_name, ifelse(VisiumHD, "/outs/binned_outputs/square_008um/spatial", "/spatial")),
     image.name = "tissue_hires_image.png",
     assay = "Spatial",
     slice = batch_file_name,
@@ -154,7 +164,7 @@ saveRDS(list(
 
 # Convert to AnnData
 # scCustomize::as.anndata(x = merged_obj, file_path = "/scratch/hh01116/download", file_name = "DIPG_B7_expr_six_merged_merged.h5ad")
-scCustomize::as.anndata(x = merged_obj, file_path = paste0(project_dir, "rds_data/"), file_name = paste0(output.file.prefix, "_merged.h5ad"))
+scCustomize::as.anndata(x = merged_obj, file_path = rds_data_dir, file_name = paste0(output.file.prefix, "_merged.h5ad"))
 
 # Clear merged_obj from memory
 rm(merged_obj)

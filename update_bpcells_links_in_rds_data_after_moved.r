@@ -5,29 +5,18 @@ library(BPCells)
 
 update_bpcells_slots <- function(obj, old_dir, new_dir) {
     for (assay_name in names(obj@assays)) {
-        if ("sketch" == assay_name) {
-            next # Skip sketch assay as it stores in memory
-        }
         assay <- obj@assays[[assay_name]]
         # For Assay5 objects, use @layers slot
         if ("layers" %in% slotNames(assay)) {
-            # Update counts layer if it's a BPCells matrix and path starts with old_dir
-            if ("counts" %in% names(assay@layers) && inherits(assay@layers[["counts"]]@matrix, "MatrixDir")) {
-                if ("dir" %in% slotNames(assay@layers[["counts"]]@matrix)) {
-                    bp_dir <- assay@layers[["counts"]]@matrix@dir
-                    if (startsWith(bp_dir, old_dir)) {
-                        new_bp_dir <- sub(old_dir, new_dir, bp_dir, fixed = TRUE)
-                        assay@layers[["counts"]]@matrix@dir <- new_bp_dir
-                    }
-                }
-            }
-            # Update data layer if it's a BPCells matrix and path starts with old_dir
-            if ("data" %in% names(assay@layers) && inherits(assay@layers[["data"]]@matrix, "MatrixDir")) {
-                if ("dir" %in% slotNames(assay@layers[["data"]]@matrix)) {
-                    bp_dir <- assay@layers[["data"]]@matrix@dir
-                    if (startsWith(bp_dir, old_dir)) {
-                        new_bp_dir <- sub(old_dir, new_dir, bp_dir, fixed = TRUE)
-                        assay@layers[["data"]]@matrix@dir <- new_bp_dir
+            for (key in names(assay@layers)) {
+                # Check if the layer is a RenameDims object (BPCells)
+                if (inherits(assay@layers[[key]], "RenameDims")) {
+                    if ("dir" %in% slotNames(assay@layers[[key]]@matrix)) {
+                        bp_dir <- assay@layers[[key]]@matrix@dir
+                        if (startsWith(bp_dir, old_dir)) {
+                            new_bp_dir <- sub(old_dir, new_dir, bp_dir, fixed = TRUE)
+                            assay@layers[[key]]@matrix@dir <- new_bp_dir
+                        }
                     }
                 }
             }

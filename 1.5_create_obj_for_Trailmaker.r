@@ -174,6 +174,6 @@ scdata@reductions <- scdata@reductions[intersect(names(scdata@reductions), c("pc
 
 # 7. Save the object for Trailmaker (object is already in v4 format)
 saveRDS(scdata, file = paste0(
-    project_dir, "rds_data/", output.file.prefix,
+    rds_data_dir, output.file.prefix,
     ifelse(use_spatial_coords, "_spatial", ""), "_forTrailmaker.rds"
 ))
