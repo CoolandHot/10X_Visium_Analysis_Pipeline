@@ -439,6 +439,16 @@ def create_cell_population_slide(batch, config):
         output_dir=config['paths']['cell_abundance_heatmap_path'],
         batch=batch
     )
+
+    if not os.path.exists(all_pdf):
+        print(f"Warning: All cell abundance PDF not found for batch {batch}: {all_pdf}")
+        return {
+            "title": f"Cell Population - {batch}",
+            "highlights": ["No data available for this batch."],
+            "body": create_placeholder_container("No data available for this batch."),
+            "footer": [],
+        }
+    
     sub_fld = os.path.join(out_images, f"{batch}_subplots")
     Path(sub_fld).mkdir(parents=True, exist_ok=True)
     for ct in settings["cell_types_for_population"]:
@@ -505,7 +515,7 @@ def generate_cell_population_presentations(config):
     ws.create(
         content=content,
         title_page=title_page,
-        fname=pres_path,
+        fname=os.path.abspath(pres_path),
         open_in_browser=False,
         show_index_page=True,
         show_topcat=True,
@@ -689,7 +699,7 @@ def generate_nmf_presentations(config):
     ws.create(
         content=content,
         title_page=title_page,
-        fname=pres_path,
+        fname=os.path.abspath(pres_path),
         open_in_browser=False,
         show_index_page=True,
         show_topcat=True,
