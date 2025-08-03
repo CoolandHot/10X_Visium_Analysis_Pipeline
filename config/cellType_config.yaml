@@ -130,6 +130,7 @@ dge_analysis:
   n_top_genes_per_group: 1000 # Number of top DEGs to identify per comparison
   use_raw_counts_cell_type_dge: false # Use adata.raw for DGE by cell type abundance
   use_raw_counts_nmf_dge: false # Use adata.raw for DGE by NMF groups
+  skip_existing_dge_results: true # Set to true to skip DGE if result files exist
 
 # NMF Colocalization Analysis Parameters
 nmf_analysis:
@@ -195,4 +196,3 @@ local_report:
       pdf_pattern: "{output_dir}/{batch}_nmf_analysis_spatial_density.pdf"
       layout_rows: 3
       layout_cols: 2
-

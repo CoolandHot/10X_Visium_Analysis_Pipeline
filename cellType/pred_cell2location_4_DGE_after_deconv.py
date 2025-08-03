@@ -342,6 +342,15 @@ def dge_within_samples(adata_full, cell_type_name, config, use_raw=True):
             print(f"Not enough spots in 'High' or 'Low' abundance groups for {sample_id}. Skipping DGE.")
             continue
 
+        # Check if results already exist and skip if configured to do so
+        comparison_name = f"{sample_id}_{cell_type_name.replace(' ', '_').replace('/', '_')}_high_vs_low"
+        dge_results_path = f"{deg_output_path}/{comparison_name}.csv"
+        skip_existing_dge = config['dge_analysis'].get('skip_existing_dge_results', True)
+        
+        if skip_existing_dge and os.path.exists(dge_results_path):
+            print(f"DGE results already exist for {comparison_name}. Skipping analysis.")
+            continue
+
         # Perform DGE analysis
         if _perform_dge_analysis(adata, group_col_name, effective_use_raw):
             # Display top results
@@ -350,7 +359,6 @@ def dge_within_samples(adata_full, cell_type_name, config, use_raw=True):
             print(result_df.head(10))
 
             # Save results
-            comparison_name = f"{sample_id}_{cell_type_name.replace(' ', '_').replace('/', '_')}_high_vs_low"
             _save_dge_results(adata, 'High', comparison_name, deg_output_path)
             
             # Generate plots
@@ -519,33 +527,49 @@ def dge_across_samples(adata_full, cell_type_name, config, use_raw=True):
         
         print(f"Group sizes: {groups_info}")
         
+        # Check if results already exist and skip if configured to do so
+        safe_cell_type = cell_type_name.replace(' ', '_').replace('/', '_')
+        skip_existing_dge = config['dge_analysis'].get('skip_existing_dge_results', True)
+        
         # Perform DGE for high abundance groups
         if groups_info[f'{sample1}_high'] >= 3 and groups_info[f'{sample2}_high'] >= 3:
-            print(f"Performing DGE: {sample1}_high vs {sample2}_high")
-            _perform_cross_sample_dge_comparison(
-                adata_full, sample1_high_mask, sample2_high_mask, 
-                f"{sample1}_high", f"{sample2}_high", 
-                cell_type_name, abundance_col, use_raw,
-                deg_across_sample_output_path, "high_abundance", population_info
-            )
-            # Clean up memory after each comparison
-            _close_all_figures()
-            _cleanup_memory()
+            comparison_name_high = f"cross_sample_{sample1}_high_vs_{sample2}_high_{safe_cell_type}_high_abundance"
+            dge_results_path_high = f"{deg_across_sample_output_path}/{comparison_name_high}.csv"
+            
+            if skip_existing_dge and os.path.exists(dge_results_path_high):
+                print(f"DGE results already exist for {comparison_name_high}. Skipping analysis.")
+            else:
+                print(f"Performing DGE: {sample1}_high vs {sample2}_high")
+                _perform_cross_sample_dge_comparison(
+                    adata_full, sample1_high_mask, sample2_high_mask, 
+                    f"{sample1}_high", f"{sample2}_high", 
+                    cell_type_name, abundance_col, use_raw,
+                    deg_across_sample_output_path, "high_abundance", population_info
+                )
+                # Clean up memory after each comparison
+                _close_all_figures()
+                _cleanup_memory()
         else:
             print(f"Insufficient spots for high abundance comparison: {sample1}_high ({groups_info[f'{sample1}_high']}) vs {sample2}_high ({groups_info[f'{sample2}_high']})")
         
         # Perform DGE for low abundance groups
         if groups_info[f'{sample1}_low'] >= 3 and groups_info[f'{sample2}_low'] >= 3:
-            print(f"Performing DGE: {sample1}_low vs {sample2}_low")
-            _perform_cross_sample_dge_comparison(
-                adata_full, sample1_low_mask, sample2_low_mask,
-                f"{sample1}_low", f"{sample2}_low",
-                cell_type_name, abundance_col, use_raw,
-                deg_across_sample_output_path, "low_abundance", population_info
-            )
-            # Clean up memory after each comparison
-            _close_all_figures()
-            _cleanup_memory()
+            comparison_name_low = f"cross_sample_{sample1}_low_vs_{sample2}_low_{safe_cell_type}_low_abundance"
+            dge_results_path_low = f"{deg_across_sample_output_path}/{comparison_name_low}.csv"
+            
+            if skip_existing_dge and os.path.exists(dge_results_path_low):
+                print(f"DGE results already exist for {comparison_name_low}. Skipping analysis.")
+            else:
+                print(f"Performing DGE: {sample1}_low vs {sample2}_low")
+                _perform_cross_sample_dge_comparison(
+                    adata_full, sample1_low_mask, sample2_low_mask,
+                    f"{sample1}_low", f"{sample2}_low",
+                    cell_type_name, abundance_col, use_raw,
+                    deg_across_sample_output_path, "low_abundance", population_info
+                )
+                # Clean up memory after each comparison
+                _close_all_figures()
+                _cleanup_memory()
         else:
             print(f"Insufficient spots for low abundance comparison: {sample1}_low ({groups_info[f'{sample1}_low']}) vs {sample2}_low ({groups_info[f'{sample2}_low']})")
 
