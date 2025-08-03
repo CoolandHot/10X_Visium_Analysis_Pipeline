@@ -416,6 +416,63 @@ class Visualizer:
         self.dataset_config = self.config['dataset']
         self.paths = self.config['paths']
 
+    @staticmethod
+    def generate_visualizations_for_adata(adata, config, output_path, combine_cell_types=False, cell_type_combinations=None):
+        """
+        Shared visualization logic for merged results.
+        Optionally combines cell types as specified.
+        """
+        from types import SimpleNamespace
+        temp_config = SimpleNamespace()
+        temp_config_dict = deepcopy(config)
+        combined_cell_types = []
+        combined_heatmap_path = None
+
+        if combine_cell_types and cell_type_combinations:
+            print("Combining subtypes into new cell types as specified in config (for visualization)...")
+            def combine_cell_type_abundances(adata, cell_type_combinations):
+                combined_cell_types = []
+                for combined, subtypes in cell_type_combinations.items():
+                    valid_subtypes = [s for s in subtypes if s in adata.obs.columns]
+                    if not valid_subtypes:
+                        continue
+                    adata.obs[combined] = adata.obs[valid_subtypes].sum(axis=1)
+                    combined_cell_types.append(combined)
+                return combined_cell_types
+            combined_cell_types = combine_cell_type_abundances(adata, cell_type_combinations)
+            combined_heatmap_path = config['paths']['cell_abundance_heatmap_path'] + '_combined'
+            os.makedirs(combined_heatmap_path, exist_ok=True)
+            temp_config_dict['paths']['cell_abundance_heatmap_path'] = combined_heatmap_path
+            # Only plot combined cell types
+            if 'mod' not in adata.uns:
+                adata.uns['mod'] = {}
+            adata.uns['mod']['factor_names'] = combined_cell_types
+        else:
+            print("Using original cell subtypes for visualization (no combination specified in config)")
+
+        temp_config.config = temp_config_dict
+        temp_config.get_path = lambda x: temp_config_dict['paths'][x]
+        visualizer = Visualizer(temp_config, output_path)
+
+        print("Generating visualizations for merged data...")
+        try:
+            visualizer._plot_spatial_abundances(adata)
+            print("✓ Spatial abundance plots generated successfully")
+        except Exception as e:
+            print(f"Warning: Could not generate spatial abundance plots: {e}")
+        try:
+            visualizer._plot_umap(adata)
+            print("✓ UMAP plots generated successfully")
+        except Exception as e:
+            print(f"Warning: Could not generate UMAP plots: {e}")
+        try:
+            visualizer._plot_batches_by_cell_type(adata)
+            print("✓ Batch comparison plots generated successfully")
+        except Exception as e:
+            print(f"Warning: Could not generate batch comparison plots: {e}")
+
+        print(f"Visualization complete. Results available in: {combined_heatmap_path if combine_cell_types and cell_type_combinations else output_path}")
+
     def _get_circle_diameter(self, adata):
         """Determines circle diameter based on dataset size."""
         n_cells = adata.n_obs
@@ -519,12 +576,13 @@ class Visualizer:
     
     def _plot_umap(self, adata_vis):
         """Generates and saves UMAP plots."""
-        print("Plotting UMAP...")
-        with mpl.rc_context({'axes.facecolor': 'white', 'figure.figsize': [12, 6]}):
-            plot_colors = ['region_cluster', self.dataset_config['sample_batch_key']]
-            sc.pl.umap(adata_vis, color=plot_colors, size=30, ncols=len(plot_colors), show=False)
-            plt.savefig(f"{self.paths['cell_abundance_heatmap_path']}/umap_clustering.pdf", bbox_inches='tight')
-            plt.close()
+        if 'umap' in adata_vis.obsm or 'X_umap' in adata_vis.obsm:
+            print("Plotting UMAP...")
+            with mpl.rc_context({'axes.facecolor': 'white', 'figure.figsize': [12, 6]}):
+                plot_colors = ['region_cluster', self.dataset_config['sample_batch_key']]
+                sc.pl.umap(adata_vis, color=plot_colors, size=30, ncols=len(plot_colors), show=False)
+                plt.savefig(f"{self.paths['cell_abundance_heatmap_path']}/umap_clustering.pdf", bbox_inches='tight')
+                plt.close()
 
     def _plot_batches_by_cell_type(self, adata_vis):
         """Plots all batches for each cell type in separate PDFs with adaptive layouts."""
@@ -1136,34 +1194,19 @@ class BatchMerger:
         
         # Only export columns that exist
         existing_columns = [col for col in columns_to_export if col in merged_adata.obs.columns]
-        
-        csv_path = f"{output_path}/merged_cell_abundances_and_clusters.csv"
+
+        csv_path = f"{self.config['paths']['cell_abundance_results']}/cell_abundances_and_clusters.csv"
         merged_adata.obs[existing_columns].to_csv(csv_path)
         print(f"Saved merged cell abundances to {csv_path}")
         
     def _generate_merged_visualizations(self, merged_adata, output_path):
-        """Generates visualizations for the merged dataset."""
-        print("Generating visualizations for merged data...")
-        
-        # Create a temporary visualizer for the merged results
-        from types import SimpleNamespace
-        temp_config = SimpleNamespace()
-        temp_config.config = self.config
-        temp_config.get_path = lambda x: self.config['paths'][x]
-        
-        visualizer = Visualizer(temp_config, output_path)
-        
-        # Generate spatial plots (skip QC and training history since we don't have the model)
-        try:
-            visualizer._plot_spatial_abundances(merged_adata)
-        except Exception as e:
-            print(f"Warning: Could not generate spatial abundance plots: {e}")
-        
-        # Generate UMAP plots
-        try:
-            visualizer._plot_umap(merged_adata)
-        except Exception as e:
-            print(f"Warning: Could not generate UMAP plots: {e}")
+        """Generates visualizations for the merged dataset using shared logic."""
+        config = self.config
+        combine_cell_types = config.get('shared', {}).get('combine_cell_types', False)
+        cell_type_combinations = config.get('shared', {}).get('cell_type_combinations', {})
+        Visualizer.generate_visualizations_for_adata(
+            merged_adata, config, output_path, combine_cell_types, cell_type_combinations
+        )
 
 
 class Cell2LocationPipeline:
@@ -1195,12 +1238,12 @@ class Cell2LocationPipeline:
             self._run_full()
     
     def _visualize(self):
-        """Generates visualizations for existing results."""
+        """Generates visualizations for existing results using shared logic."""
         print("=== Mode: Visualize Existing Merged Results ===")
         merged_output_path = f"{self.config_manager.get_path('spatial_output')}/merged_results"
         merged_adata_path = f"{merged_output_path}/merged_adata.h5ad"
         fallback_adata_path = f"{self.config_manager.get_path('spatial_output')}/sp.h5ad"
-        
+
         # Try merged results first, then fallback to single-run output
         if os.path.exists(merged_adata_path):
             print(f"Loading merged dataset from {merged_adata_path}")
@@ -1213,7 +1256,6 @@ class Cell2LocationPipeline:
                     " Run with --merge or process the full dataset first."
                 )
             print(f"No merged results found. Falling back to single-run output at {fallback_adata_path}")
-            # Use the new utility function for incremental loading
             merged_adata = load_incremental_adata(self.config_manager.get_path('spatial_output'))
             if merged_adata is None:
                 merged_adata = load_processed_spatial_data(self.config_manager.get_path('spatial_output'))
@@ -1222,68 +1264,10 @@ class Cell2LocationPipeline:
         config = self.config_manager.config
         combine_cell_types = config.get('shared', {}).get('combine_cell_types', False)
         cell_type_combinations = config.get('shared', {}).get('cell_type_combinations', {})
-        combined_cell_types = []
-        combined_heatmap_path = None
 
-        from types import SimpleNamespace
-        temp_config = SimpleNamespace()
-
-        if combine_cell_types and cell_type_combinations:
-            print("Combining subtypes into new cell types as specified in config (for visualization)...")
-            def combine_cell_type_abundances(adata, cell_type_combinations):
-                combined_cell_types = []
-                for combined, subtypes in cell_type_combinations.items():
-                    valid_subtypes = [s for s in subtypes if s in adata.obs.columns]
-                    if not valid_subtypes:
-                        continue
-                    adata.obs[combined] = adata.obs[valid_subtypes].sum(axis=1)
-                    combined_cell_types.append(combined)
-                return combined_cell_types
-            combined_cell_types = combine_cell_type_abundances(merged_adata, cell_type_combinations)
-            # Set new output directory for combined cell type plots
-            combined_heatmap_path = config['paths']['cell_abundance_heatmap_path'] + '_combined'
-            os.makedirs(combined_heatmap_path, exist_ok=True)
-            # Patch config for visualizer
-            
-            temp_config_dict = deepcopy(config)
-            temp_config_dict['paths']['cell_abundance_heatmap_path'] = combined_heatmap_path
-            # Only plot combined cell types
-            def patch_factor_names(adata, combined_cell_types):
-                if 'mod' not in adata.uns:
-                    adata.uns['mod'] = {}
-                adata.uns['mod']['factor_names'] = combined_cell_types
-            patch_factor_names(merged_adata, combined_cell_types)
-            # Create a temporary visualizer for the merged results
-            temp_config.config = temp_config_dict
-            temp_config.get_path = lambda x: temp_config_dict['paths'][x]
-        else:
-            print("Using original cell subtypes for visualization (no combination specified in config)")
-            # Default: use all cell types and original output path
-            temp_config.config = config
-            temp_config.get_path = lambda x: config['paths'][x]
-
-        visualizer = Visualizer(temp_config, output_path)
-        # Generate visualizations with proper error handling
-        print("Generating visualizations for merged data...")
-        try:
-            visualizer._plot_spatial_abundances(merged_adata)
-            print("✓ Spatial abundance plots generated successfully")
-        except Exception as e:
-            print(f"Warning: Could not generate spatial abundance plots: {e}")
-        
-        try:
-            visualizer._plot_umap(merged_adata)
-            print("✓ UMAP plots generated successfully")
-        except Exception as e:
-            print(f"Warning: Could not generate UMAP plots: {e}")
-        
-        try:
-            visualizer._plot_batches_by_cell_type(merged_adata)
-            print("✓ Batch comparison plots generated successfully")
-        except Exception as e:
-            print(f"Warning: Could not generate batch comparison plots: {e}")
-        
-        print(f"Visualization complete. Results available in: {combined_heatmap_path if combine_cell_types and cell_type_combinations else output_path}")
+        Visualizer.generate_visualizations_for_adata(
+            merged_adata, config, output_path, combine_cell_types, cell_type_combinations
+        )
         return
 
     def _merge_batches(self):
