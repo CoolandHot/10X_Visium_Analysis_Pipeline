@@ -1240,8 +1240,8 @@ class Cell2LocationPipeline:
     def _visualize(self):
         """Generates visualizations for existing results using shared logic."""
         print("=== Mode: Visualize Existing Merged Results ===")
-        merged_output_path = f"{self.config_manager.get_path('spatial_output')}/merged_results"
-        merged_adata_path = f"{merged_output_path}/merged_adata.h5ad"
+        merged_output_path = f"{self.config_manager.get_path('spatial_output')}"
+        merged_adata_path = f"{merged_output_path}/merged_results/merged_adata.h5ad"
         fallback_adata_path = f"{self.config_manager.get_path('spatial_output')}/sp.h5ad"
 
         # Try merged results first, then fallback to single-run output
