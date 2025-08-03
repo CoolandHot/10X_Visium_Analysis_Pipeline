@@ -176,7 +176,7 @@ Author: Refactored for modular, distributed processing
 Version: 2.0
 Last Updated: 2024
 '''
-
+import scipy.sparse
 import scanpy as sc
 import numpy as np
 import torch
@@ -188,7 +188,7 @@ import os
 import yaml
 import cell2location
 from cell2location.plt import plot_spatial
-from cellType.pred_cell2location_utils import extract_adata_additions, restore_adata_additions, load_processed_spatial_data, load_incremental_adata
+from pred_cell2location_utils import load_configuration, extract_adata_additions, restore_adata_additions, load_processed_spatial_data, load_incremental_adata
 import anndata as ad
 import argparse
 import json
@@ -200,13 +200,13 @@ rcParams['pdf.fonttype'] = 42
 
 class ConfigManager:
     """Handles loading and accessing the configuration from config/cellType_config.yaml."""
-    def __init__(self, config_path='config/cellType_config.yaml'):
+    def __init__(self):
         """Loads configuration and sets up paths."""
         print("Loading configuration...")
-        with open(config_path, 'r') as f:
-            self.config = yaml.safe_load(f)
-        
+        self.config = load_configuration()
+        batch_config = load_configuration(config_path='config/batch_config.yaml')
         self.paths = self.config['paths']
+        self.config['dataset']['available_slices'] = batch_config.get('batch_names', [])
         self.dataset_config = self.config['dataset']
         self.splitting_config = self.dataset_config['splitting']
 
@@ -260,9 +260,18 @@ class DataProcessor:
              print("WARNING: Data appears to be log-transformed. Reverting with np.expm1.")
              adata.X = np.expm1(adata.X.toarray() if hasattr(adata.X, 'toarray') else adata.X)
 
-        adata.X = np.clip(adata.X, 0, None)
+        if scipy.sparse.issparse(adata.X):
+            # Only clip negative values in-place for sparse matrix
+            adata.X.data = np.clip(adata.X.data, 0, None)
+        else:
+            adata.X = np.clip(adata.X, 0, None)
+
         if not np.issubdtype(adata.X.dtype, np.integer):
-            adata.X = np.round(adata.X).astype(np.int32)
+            # For sparse, convert to dense before rounding and casting
+            if scipy.sparse.issparse(adata.X):
+                adata.X = np.round(adata.X.toarray()).astype(np.int32)
+            else:
+                adata.X = np.round(adata.X).astype(np.int32)
         print(f"Final data type: {adata.X.dtype}, Range: [{adata.X.min()}, {adata.X.max()}]")
         return adata
 

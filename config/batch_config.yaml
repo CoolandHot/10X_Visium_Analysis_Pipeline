@@ -72,15 +72,15 @@ Differential_Gene_Analysis:
   edgeTumour_cluster_nums: []
   
   across_batch_comparisons: # the latter one is the control group
-    - ["Run1_L1_KD", "Run1_NM_SAL"]
-    - ["Run1_R1_RAD", "Run1_NM_SAL"]
-    - ["Run1_R1_COMB", "Run1_NM_SAL"]
-    - ["Run2_R1_KD", "Run2_L1_SAL"]
-    - ["Run2_NM_RAD", "Run2_L1_SAL"]
-    - ["Run2_L1_COMB", "Run2_L1_SAL"]
-    - ["Run3_NM_KD", "Run3_R1_SAL"]
-    - ["Run3_NM_RAD", "Run3_R1_SAL"]
-    - ["Run3_NM_COMB", "Run3_R1_SAL"]
+    - ["Run1_KD", "Run1_SAL"]
+    - ["Run1_RAD", "Run1_SAL"]
+    - ["Run1_COMB", "Run1_SAL"]
+    - ["Run2_KD", "Run2_SAL"]
+    - ["Run2_RAD", "Run2_SAL"]
+    - ["Run2_COMB", "Run2_SAL"]
+    - ["Run3_KD", "Run3_SAL"]
+    - ["Run3_RAD", "Run3_SAL"]
+    - ["Run3_COMB", "Run3_SAL"]
 
 
 

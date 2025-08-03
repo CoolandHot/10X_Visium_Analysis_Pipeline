@@ -11,7 +11,7 @@ import squidpy as sq
 
 
 # Import utility functions from DGE script
-from cellType.pred_cell2location_utils import (
+from pred_cell2location_utils import (
     load_configuration, 
     load_processed_spatial_data, 
     extract_adata_additions, 

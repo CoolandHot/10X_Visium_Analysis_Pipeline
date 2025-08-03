@@ -12,7 +12,7 @@ from pathlib import Path
 import webslides as ws
 import fitz  # PyMuPDF
 from pdf2image import convert_from_path
-from cellType.pred_cell2location_utils import load_configuration as load_config
+from pred_cell2location_utils import load_configuration
 
 # --- Shared modal functionality constants ---
 MODAL_CSS_JS = """
@@ -279,24 +279,6 @@ def extract_subplots_by_title(
                             save_path = os.path.join(output_folder, filename)
                             subplot.save(save_path)
                             print(f"    ✓ Saved subplot: {filename}")
-
-
-
-def load_config(config_file="config/cellType_config.yaml"):
-    """Loads configuration from a YAML file."""
-    try:
-        with open(config_file, "r") as f:
-            config_data = yaml.safe_load(f)
-
-        return config_data
-
-    except FileNotFoundError:
-        print(f"Error: Configuration file '{config_file}' not found.")
-        return None
-    except yaml.YAMLError as e:
-        print(f"Error parsing YAML file: {e}")
-        return None
-
 
 def extract_pdf_first_page(pdf_path, output_dir, base_name, config):
     """Extract the first page of a PDF as an image."""
@@ -744,7 +726,9 @@ if __name__ == "__main__":
     print("--- Starting WebSlides Presentation Generation ---")
 
     # Load configuration
-    config = load_config()
+    config = load_configuration()
+    batch_config = load_configuration("config/batch_config.yaml")
+    config['shared']['within_sample_groups'] = batch_config.get('batch_names', [])
     if not config:
         sys.exit(1)
 

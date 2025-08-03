@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import squidpy as sq
 import gc
-from cellType.pred_cell2location_utils import load_configuration, load_processed_spatial_data
+from pred_cell2location_utils import load_configuration, load_processed_spatial_data
 
 def _cleanup_memory():
     """Force garbage collection to free memory."""
@@ -668,6 +668,8 @@ def combine_cell_type_abundances(adata, cell_type_combinations):
 if __name__ == '__main__':
     # --- 1. Load Configuration and Data ---
     config = load_configuration('config/cellType_config.yaml')
+    batch_config = load_configuration("config/batch_config.yaml")
+    config['shared']['cross_sample_comparisons'] = batch_config['Differential_Gene_Analysis'].get('across_batch_comparisons', [])
     run_name = config['paths']['spatial_output']
     os.makedirs(run_name, exist_ok=True)
     adata_vis_mapped = load_processed_spatial_data(run_name)

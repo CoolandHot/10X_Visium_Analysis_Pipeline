@@ -1,6 +1,8 @@
+#%%
 import scanpy as sc
 import squidpy as sq
 import os
+import numpy as np
 import yaml
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -16,6 +18,17 @@ sc.settings.figdir = output_dir
 # ---- Read AnnData ----
 adata = sc.read_h5ad(h5ad_path)
 
+# remove MT/mt (mitochondrial) genes
+feature_names = adata.var_names
+keep_features = ~feature_names.str.startswith(("MT-", "mt-"))
+adata = adata[:, keep_features].copy()
+# convert adata.X from csc_matrix 'float64' to 'int32'
+if sc.is_csc(adata.X) and not np.issubdtype(adata.X.dtype, np.integer):
+    adata.X = adata.X.astype('int32')
+# write back to h5ad
+adata.write_h5ad(h5ad_path, compression='gzip')
+
+#%%
 # Use squidpy to plot all batches with correct image placement
 if "library_id" in adata.obs.columns:
     # sq.pl.spatial_scatter(
@@ -25,7 +38,7 @@ if "library_id" in adata.obs.columns:
     #     img=True,
     #     save="_validate_all_batches.pdf"
     # )
-    with PdfPages("spatial_scatter_plots.pdf") as pdf:
+    with PdfPages(f"{output_dir}/spatial_scatter_plots.pdf") as pdf:
         for subset_id in adata.obs["library_id"].unique():
             subset = adata[adata.obs["library_id"] == subset_id].copy()
             for k in list(subset.uns['spatial'].keys()):

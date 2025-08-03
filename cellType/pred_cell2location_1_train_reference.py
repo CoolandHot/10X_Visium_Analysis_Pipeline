@@ -5,7 +5,7 @@ import os
 import cell2location
 from cell2location.utils.filtering import filter_genes
 from cell2location.models import RegressionModel
-from cellType.pred_cell2location_utils import load_configuration
+from pred_cell2location_utils import load_configuration
 
 from matplotlib import rcParams
 rcParams['pdf.fonttype'] = 42  # enables correct plotting of text for PDFs

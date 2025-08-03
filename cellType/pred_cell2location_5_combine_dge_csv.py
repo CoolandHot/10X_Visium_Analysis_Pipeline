@@ -8,7 +8,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from cellType.pred_cell2location_utils import load_configuration as load_config
+from pred_cell2location_utils import load_configuration as load_configuration
 
 
 # def create_excel_report(csv_folder_path, output_excel_path, sheet_name_pattern):
@@ -178,7 +178,7 @@ def merge_csvs_to_one(csv_folder_path, group, pattern_func, merged_rows):
 if __name__ == "__main__":
     print("--- Starting Local CSV Merge ---")
 
-    config = load_config()
+    config = load_configuration()
     if not config:
         sys.exit(1)
 
