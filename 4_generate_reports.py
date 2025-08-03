@@ -15,7 +15,7 @@ import shutil
 class ReportGenerator:
     """Generates interactive HTML5 reports for spatial transcriptomics analysis"""
     
-    def __init__(self, config_path='config/batch_config.yaml'):
+    def __init__(self, config_path='batchName_config.yml'):
         """Initialize with configuration"""
         self.base_dir = Path(__file__).parent
         self.config = self._load_config(config_path)
@@ -116,7 +116,7 @@ class ReportGenerator:
         print(f"Open {self.report_dir}/index.html to view the main navigation")
 
     def _generate_section_reports(self):
-        """Generate all section reports using a unified approach"""
+        """Generate all reports"""
         sections = [
             {
                 "filename": "clustering_report.html",
@@ -154,7 +154,8 @@ class ReportGenerator:
                   <li><b>edgeTumour clusters</b>: {self.edgeTumour_clusters}</li>
                 </ul>
                 """,
-                "file_sections": self._dge_file_sections()
+                "file_sections": self._dge_file_sections(),
+                "is_dge": True
             },
             {
                 "filename": "pathway_report.html",
@@ -178,12 +179,20 @@ class ReportGenerator:
             }
         ]
         for section in sections:
-            self._generate_section_report(
-                section["filename"],
-                section["title"],
-                section["file_sections"],
-                intro_text=section["intro"]
-            )
+            if section.get("is_dge"):
+                self._generate_dge_report(
+                    section["filename"],
+                    section["title"],
+                    section["file_sections"],
+                    intro_text=section["intro"]
+                )
+            else:
+                self._generate_section_report(
+                    section["filename"],
+                    section["title"],
+                    section["file_sections"],
+                    intro_text=section["intro"]
+                )
 
     def _clustering_file_sections(self):
         return [
@@ -604,6 +613,570 @@ class ReportGenerator:
         
         with open(self.report_dir / filename, 'w') as f:
             f.write(html_content)
+
+    def _generate_dge_report(self, filename, title, file_sections, intro_text):
+        """Generate a redesigned DGE report with tabbed interface and dynamic file filtering"""
+        # Get CSS and JS first
+        extra_css = self._get_section_css() + self._get_floating_nav_css() + self._get_dge_report_css()
+        extra_js = self._get_floating_nav_js() + self._get_view_toggle_js() + self._get_search_js() + self._get_dge_report_js()
+        
+        # Get base template
+        html_content = self._get_base_html_template(title)
+        
+        # Prepare section anchors for floating nav
+        section_anchors = []
+        sections_html = ""
+        for idx, section in enumerate(file_sections):
+            anchor = f"section-{idx+1}"
+            section_anchors.append({
+                "id": anchor,
+                "title": section['title']
+            })
+            files = self._find_files(
+                section["pattern"],
+                section.get("subdirs", []),
+                section.get("exclude_subdirs", []),
+                section.get("exclude_patterns", [])
+            )
+            file_cards = self._generate_file_cards(files)
+            
+            sections_html += f"""
+            <div class="section" id="{anchor}">
+                <div class="section-header">
+                    <h2>{section['title']}</h2>
+                    <div class="search-container">
+                        <input type="text" class="search-input" placeholder="🔍 Search files..." data-section="{anchor}">
+                        <span class="file-count">({len(files)} files)</span>
+                    </div>
+                </div>
+                <p class="section-description">{section['description']}</p>
+                <div class="file-grid" data-section="{section['title'].lower().replace(' ', '-')}">
+                    {file_cards}
+                </div>
+            </div>
+            """
+
+        # Floating navigator HTML 
+        floating_nav_html = self._generate_floating_nav_html(section_anchors)
+        
+        # Get batch names from config
+        batch_names = self.config.get('batch_names', [])
+        
+        # Get cell types from cellType_config.yaml
+        cell_types = []
+        try:
+            celltype_config_path = self.base_dir / "config" / "cellType_config.yaml"
+            with open(celltype_config_path, 'r') as f:
+                import yaml
+                celltype_config = yaml.safe_load(f)
+                cell_type_combinations = celltype_config.get('shared', {}).get('cell_type_combinations', {})
+                cell_types = celltype_config.get('shared', {}).get('target_cell_types', [])
+
+                if cell_type_combinations:
+                    other_cell_types = set(cell_types) - set(cell_type_combinations.values())
+                    cell_types = list(cell_type_combinations.keys()) + list(other_cell_types)
+                    
+        except Exception as e:
+            print(f"Warning: Could not load cell type config: {e}")
+            cell_types = ["T cells", "Macrophages", "Astrocytes"]  # Default fallback
+
+        content = f"""
+        <div class="header">
+            <button onclick="window.open('index.html', '_blank')" class="back-btn">← Back to Main</button>
+            <h1>{title}</h1>
+        </div>
+        {floating_nav_html}
+        <div class="intro">
+            {intro_text}
+        </div>
+        <div class="content">
+            <!-- Tab navigation -->
+            <div class="tab-navigation">
+                <button class="tab-button active" data-tab="cell-type">Cell Type Comparison</button>
+                <button class="tab-button" data-tab="gene-expression">Gene Expression Comparison</button>
+            </div>
+            
+            <!-- Tab content containers -->
+            <div class="tab-content active" id="cell-type-content">
+                <div class="control-panel">
+                    <div class="form-group">
+                        <label for="cell-comparison-scope">Comparison Scope:</label>
+                        <select id="cell-comparison-scope" onchange="toggleVisibility()">
+                            <option value="within">Within-sample</option>
+                            <option value="cross">Cross-sample</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="cell-sample-group">
+                        <label for="cell-sample-single">Sample:</label>
+                        <select id="cell-sample-single">
+                            {''.join([f'<option value="{batch}">{batch}</option>' for batch in batch_names])}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group hidden" id="cell-sample-pair-group">
+                        <label for="cell-sample-a">Sample A:</label>
+                        <select id="cell-sample-a">
+                            {''.join([f'<option value="{batch}">{batch}</option>' for batch in batch_names])}
+                        </select>
+                        <label for="cell-sample-b">Sample B:</label>
+                        <select id="cell-sample-b">
+                            {''.join([f'<option value="{batch}">{batch}</option>' for batch in batch_names])}
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cell-type-1">Cell Type 1:</label>
+                            <select id="cell-type-1">
+                                {''.join([f'<option value="{ct.replace(" ", "_")}">{ct}</option>' for ct in cell_types])}
+                            </select>
+                            <div class="quantile-group">
+                                <label>Quantile:</label>
+                                <label><input type="radio" name="quantile-1" value="high" checked> High</label>
+                                <label><input type="radio" name="quantile-1" value="low"> Low</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cell-type-2">Cell Type 2:</label>
+                            <select id="cell-type-2">
+                                {''.join([f'<option value="{ct.replace(" ", "_")}">{ct}</option>' for ct in cell_types])}
+                            </select>
+                            <div class="quantile-group">
+                                <label>Quantile:</label>
+                                <label><input type="radio" name="quantile-2" value="high" checked> High</label>
+                                <label><input type="radio" name="quantile-2" value="low"> Low</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="cell-filter-btn" class="filter-button">Filter Files</button>
+                </div>
+                
+                <div class="filtered-files-section">
+                    <h3>Filtered Results</h3>
+                    <div id="cell-filtered-files" class="file-grid"></div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="gene-expression-content">
+                <div class="control-panel">
+                    <div class="form-group">
+                        <label for="gene-comparison-scope">Comparison Scope:</label>
+                        <select id="gene-comparison-scope">
+                            <option value="within">Within-sample</option>
+                            <option value="cross">Cross-sample</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="gene-sample-group">
+                        <label for="gene-sample-single">Sample:</label>
+                        <select id="gene-sample-single">
+                            {''.join([f'<option value="{batch}">{batch}</option>' for batch in batch_names])}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group hidden" id="gene-sample-pair-group">
+                        <label for="gene-sample-a">Sample A:</label>
+                        <select id="gene-sample-a">
+                            {''.join([f'<option value="{batch}">{batch}</option>' for batch in batch_names])}
+                        </select>
+                        <label for="gene-sample-b">Sample B:</label>
+                        <select id="gene-sample-b">
+                            {''.join([f'<option value="{batch}">{batch}</option>' for batch in batch_names])}
+                        </select>
+                    </div>
+                    
+                    <button id="gene-filter-btn" class="filter-button">Filter Files</button>
+                </div>
+                
+                <div class="filtered-files-section">
+                    <h3>Filtered Results</h3>
+                    <div id="gene-filtered-files" class="file-grid"></div>
+                </div>
+            </div>
+            
+            <!-- Hidden sections for getAllFiles() -->
+            <div style="display: none;">
+                {sections_html}
+            </div>
+        </div>
+        """
+
+        # Replace placeholders in correct order
+        html_content = html_content.replace("{{EXTRA_CSS}}", extra_css)
+        html_content = html_content.replace("{{EXTRA_JS}}", extra_js)
+        html_content = html_content.replace("{{CONTENT}}", content)
+        
+        with open(self.report_dir / filename, 'w') as f:
+            f.write(html_content)
+
+    def _get_dge_report_css(self):
+        """CSS specific to the DGE report redesign"""
+        return """
+        .tab-navigation {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e0e6ed;
+        }
+        
+        .tab-button {
+            padding: 1rem 2rem;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+            margin-right: 0.5rem;
+        }
+        
+        .tab-button.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab-button:hover:not(.active) {
+            background: #e9ecef;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .control-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .quantile-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .quantile-group label {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .quantile-group input[type="radio"] {
+            margin-right: 0.5rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .filter-button {
+            padding: 0.75rem 1.5rem;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+        
+        .filter-button:hover {
+            background: #218838;
+        }
+        
+        .filtered-files-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .filtered-files-section h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .tab-button {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        """
+
+    def _get_dge_report_js(self):
+        """JavaScript for the DGE report redesign"""
+        return """
+        // Tab switching functionality
+        function toggleVisibility() {
+            var isWithin = document.getElementById('cell-comparison-scope').value === 'within';
+            document.getElementById('cell-type-2').parentElement.style.display = isWithin ? 'none' : '';
+            document.querySelectorAll('.quantile-group').forEach(function(el) {
+            el.style.display = isWithin ? 'none' : 'flex';
+            });
+        }
+        // Initial call to set the visibility based on the default dropdown value on page load
+        toggleVisibility();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+                    
+                    // Update active tab button
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Show corresponding tab content
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === tabId + '-content') {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // Handle scope changes for cell type comparison
+            document.getElementById('cell-comparison-scope').addEventListener('change', function() {
+                const isWithin = this.value === 'within';
+                document.getElementById('cell-sample-group').classList.toggle('hidden', !isWithin);
+                document.getElementById('cell-sample-pair-group').classList.toggle('hidden', isWithin);
+            });
+            
+            // Handle scope changes for gene expression comparison
+            document.getElementById('gene-comparison-scope').addEventListener('change', function() {
+                const isWithin = this.value === 'within';
+                document.getElementById('gene-sample-group').classList.toggle('hidden', !isWithin);
+                document.getElementById('gene-sample-pair-group').classList.toggle('hidden', isWithin);
+            });
+            
+            // Cell type filter button
+            document.getElementById('cell-filter-btn').addEventListener('click', filterCellTypeFiles);
+            
+            // Gene expression filter button
+            document.getElementById('gene-filter-btn').addEventListener('click', filterGeneExpressionFiles);
+        });
+        
+        // Filter files for cell type comparison
+        function filterCellTypeFiles() {
+            const container = document.getElementById('cell-filtered-files');
+            container.innerHTML = '';
+            const scope = document.getElementById('cell-comparison-scope').value;
+            const sampleSingle = document.getElementById('cell-sample-single').value;
+            const sampleA = document.getElementById('cell-sample-a').value;
+            const sampleB = document.getElementById('cell-sample-b').value;
+            const cellType1 = document.getElementById('cell-type-1').value;
+            const cellType2 = document.getElementById('cell-type-2').value;
+            const quantile1 = document.querySelector('input[name="quantile-1"]:checked').value;
+            const quantile2 = document.querySelector('input[name="quantile-2"]:checked').value;
+            
+            // Get all files from the existing sections
+            const allFiles = getAllFiles();
+            
+            // First filter by path - only include files from cell_type_comparisons or combined_cell_type_comparisons
+            const cellTypeFiles = allFiles.filter(file => {
+                return file.path.includes('cell_type_comparisons') || file.path.includes('combined_cell_type_comparisons');
+            });
+            
+            let filteredFiles = [];
+            
+            if (scope === 'within') {
+                // Within-sample patterns
+                const dgePattern = new RegExp(`dge_${sampleSingle}_${cellType1}_${quantile1}_vs_`);
+                const scatter_volcano_Pattern = new RegExp(`volcano_${sampleSingle}_${cellType1}_${quantile1}_vs_`);
+                
+                filteredFiles = cellTypeFiles.filter(file => {
+                    return dgePattern.test(file.path) || 
+                           scatter_volcano_Pattern.test(file.path) ||
+                           file.path.includes('stacked_barchart') ||
+                           file.path.includes('merged_dge_on_');
+                });
+            } else {
+                // Cross-sample patterns
+                const dgePattern = new RegExp(`dge_cross_sample_${sampleA}_${quantile1}_vs_${sampleB}_${quantile1}_${cellType1}_`);
+                const scatter_volcano_Pattern = new RegExp(`${sampleA}_${quantile1}_.+_${sampleB}_${quantile2}`);
+                
+                filteredFiles = cellTypeFiles.filter(file => {
+                    return dgePattern.test(file.path) || 
+                           scatter_volcano_Pattern.test(file.path) ||
+                           file.path.includes('stacked_barchart') ||
+                           file.path.includes('merged_dge_on_');
+                });
+            }
+            
+            displayFilteredFiles(filteredFiles, 'cell-filtered-files');
+        }
+        
+        // Filter files for gene expression comparison
+        function filterGeneExpressionFiles() {
+            const container = document.getElementById('gene-filtered-files');
+            container.innerHTML = '';
+            const scope = document.getElementById('gene-comparison-scope').value;
+            const sampleSingle = document.getElementById('gene-sample-single').value;
+            const sampleA = document.getElementById('gene-sample-a').value;
+            const sampleB = document.getElementById('gene-sample-b').value;
+            
+            // Get all files from the existing sections
+            const allFiles = getAllFiles();
+            
+            // First filter by path - only include files from cluster_comparisons
+            const geneExpressionFiles = allFiles.filter(file => {
+                return file.path.includes('cluster_comparisons');
+            });
+            
+            let filteredFiles = [];
+            
+            if (scope === 'within') {
+                // Within-sample patterns
+                const regionPattern = new RegExp(`(edgeTumour|inTumour|outTumour)_against_(edgeTumour|inTumour|outTumour)_${sampleSingle}`);
+                const scatter_volcano_Pattern = new RegExp(`_${sampleSingle}_[^(vs)]+`);
+                
+                filteredFiles = geneExpressionFiles.filter(file => {
+                    return regionPattern.test(file.path) || 
+                           scatter_volcano_Pattern.test(file.path) ||
+                           file.path.includes('stacked_barchart') ||
+                           file.path.includes('merged_dge_on_');
+                });
+            } else {
+                // Cross-sample patterns
+                const regionPattern = new RegExp(`(edgeTumour|inTumour|outTumour)_${sampleA}_vs_${sampleB}`);
+                const scatter_volcano_Pattern = new RegExp(`_${sampleA}_vs_${sampleB}`);
+                
+                filteredFiles = geneExpressionFiles.filter(file => {
+                    return regionPattern.test(file.path) || 
+                           scatter_volcano_Pattern.test(file.path) || 
+                           file.path.includes('stacked_barchart') ||
+                           file.path.includes('merged_dge_on_');
+                });
+            }
+            
+            displayFilteredFiles(filteredFiles, 'gene-filtered-files');
+        }
+        
+        // Get all files from existing sections
+        function getAllFiles() {
+            const fileCards = document.querySelectorAll('.file-card, .file-link-text');
+            const files = [];
+            
+            fileCards.forEach(card => {
+                let fileName = '';
+                let filePath = '';
+                
+                if (card.classList.contains('file-card')) {
+                    const fileNameElement = card.querySelector('h4');
+                    const filePathElement = card.querySelector('.file-path');
+                    if (fileNameElement) fileName = fileNameElement.textContent;
+                    if (filePathElement) filePath = filePathElement.textContent;
+                } else if (card.classList.contains('file-link-text')) {
+                    const linkElement = card.querySelector('a');
+                    const filePathElement = card.querySelector('.file-path');
+                    if (linkElement) fileName = linkElement.textContent.split(' ')[0];
+                    if (filePathElement) filePath = filePathElement.textContent;
+                }
+                
+                files.push({
+                    name: fileName,
+                    path: filePath,
+                    element: card.cloneNode(true)
+                });
+            });
+            
+            return files;
+        }
+        
+        // Display filtered files
+        function displayFilteredFiles(files, containerId) {
+            const container = document.getElementById(containerId);
+            
+            if (files.length === 0) {
+                container.innerHTML = '<div class="no-results"><p>No files match the current filter criteria.</p></div>';
+                return;
+            }
+            
+            // Add file elements with proper hyperlinks
+            files.forEach(file => {
+                // Create a copy of the element to avoid modifying the original
+                const fileElement = file.element.cloneNode(true);
+                
+                // If it's a file card, wrap it in a link
+                if (fileElement.classList.contains('file-card')) {
+                    const link = document.createElement('a');
+                    link.href = `../${file.path}`;
+                    link.target = '_blank';
+                    link.className = 'file-link';
+                    link.appendChild(fileElement);
+                    container.appendChild(link);
+                } 
+                // If it's a file link text, just append it
+                else if (fileElement.classList.contains('file-link-text')) {
+                    // Update the link href if it exists
+                    const link = fileElement.querySelector('a');
+                    if (link) {
+                        link.href = `../${file.path}`;
+                    }
+                    container.appendChild(fileElement);
+                } 
+                // For any other element, just append it
+                else {
+                    container.appendChild(fileElement);
+                }
+            });
+        }
+        """
 
     def _generate_floating_nav_html(self, section_anchors):
         """Generate HTML for the floating section navigator, with view toggle button next to title"""
