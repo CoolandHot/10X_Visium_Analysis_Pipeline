@@ -4,9 +4,15 @@ library(ggplot2)
 library(reshape2)
 require(Matrix)
 
-scdata <- readRDS("rds_data/GBM_1st_four_merged_spatial_forTrailmaker.rds")
-gene_counts <- colSums(scdata@assays$RNA@counts)
-cell_abundance <- read.csv("output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv", row.names = 1) |> dplyr::select(-c("batch", "region_cluster"))
+scdata <- readRDS("rds_data/DIPG_B7_expr_six_merged_clustered_12k.rds")
+# gene_counts <- colSums(scdata@assays$RNA@counts)
+gene_counts_array <- Seurat::GetAssayData(scdata, layer = "counts") 
+gene_counts <- colSums(gene_counts_array)
+
+cell_abundance <- read.csv("output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv", row.names = 1)
+cols_to_remove <- c("batch", "region_cluster")
+cols_to_remove <- intersect(cols_to_remove, colnames(cell_abundance))
+cell_abundance <- dplyr::select(cell_abundance, -all_of(cols_to_remove))
 cell_counts <- rowSums(cell_abundance)
 names(cell_counts) <- rownames(cell_abundance)
 
@@ -17,7 +23,7 @@ gene_counts_matched <- gene_counts[matched_names]
 cell_counts_matched <- cell_counts[matched_names]
 
 # export the matched_names of gene_counts and cell_abundance to two separate csv files
-write.csv(scdata@assays$RNA@counts[, matched_names] |> t(),
+write.csv(gene_counts_array[, matched_names] |> t(),
     file = "output/gene_counts_matched.csv",
     row.names = TRUE, quote = FALSE
 )
