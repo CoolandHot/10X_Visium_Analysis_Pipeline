@@ -9,7 +9,9 @@ scdata <- readRDS("DIPG_B7_expr_six_merged_clustered_12k.rds")
 gene_counts_array <- Seurat::GetAssayData(scdata, layer = "counts")
 gene_counts <- colSums(gene_counts_array)
 
-cell_abundance <- read.csv("output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv", row.names = 1)
+cell_abundance <- read.csv("output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv",
+    row.names = 1
+)
 cols_to_remove <- c("batch", "region_cluster")
 cols_to_remove <- intersect(cols_to_remove, colnames(cell_abundance))
 cell_abundance <- dplyr::select(cell_abundance, -all_of(cols_to_remove))

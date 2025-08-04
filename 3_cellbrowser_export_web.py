@@ -22,7 +22,6 @@ import numpy as np
 import copy
 import subprocess
 import shutil
-import re
 
 # Core scverse ecosystem
 import scanpy as sc

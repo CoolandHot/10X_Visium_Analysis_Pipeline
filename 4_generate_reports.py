@@ -1554,7 +1554,7 @@ class ReportGenerator:
                     pix.save(str(thumb_path))
                 doc.close()
             return thumb_path
-        except Exception as e:
+        except Exception as _:
             # Could not generate thumbnail
             return None
 
@@ -1567,7 +1567,7 @@ class ReportGenerator:
                     return f"{size:.1f} {unit}"
                 size /= 1024.0
             return f"{size:.1f} TB"
-        except Exception as e:
+        except Exception as _:
             return "Unknown"
 
     def _generate_csv_preview(self, file_path):
@@ -1629,7 +1629,7 @@ class ReportGenerator:
                 
                 return html_content
                 
-        except Exception as e:
+        except Exception as _:
             return '''
                 <div class="csv-error">
                     <div class="file-icon">📊</div>
