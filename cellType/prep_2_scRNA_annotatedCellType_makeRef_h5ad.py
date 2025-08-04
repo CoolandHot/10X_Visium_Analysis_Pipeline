@@ -5,14 +5,14 @@ import yaml
 import os
 
 config = yaml.load(open("config/batch_config.yaml"), Loader=yaml.FullLoader)
-project_dir = config["project_dir"]
+rds_data_dir = config["rds_data_dir"]
 
 print("Reading exported data...")
 
 # Read the exported data
-counts = pd.read_csv(f"{project_dir}rds_data/GBM_counts.csv", index_col=0)
-metadata = pd.read_csv(f"{project_dir}rds_data/GBM_metadata.csv", index_col=0)
-genes = pd.read_csv(f"{project_dir}rds_data/GBM_genes.csv", index_col=0)
+counts = pd.read_csv(f"{rds_data_dir}GBM_counts.csv", index_col=0)
+metadata = pd.read_csv(f"{rds_data_dir}GBM_metadata.csv", index_col=0)
+genes = pd.read_csv(f"{rds_data_dir}GBM_genes.csv", index_col=0)
 
 print(f"Counts matrix shape: {counts.shape}")
 print(f"Metadata shape: {metadata.shape}")
@@ -39,13 +39,13 @@ for col in required_cols:
 
 # Save the h5ad file
 print("Saving h5ad file...")
-adata.write(f"{project_dir}rds_data/GBM_earlyStage_scSeq_annotated_cell2location.h5ad")
+adata.write(f"{rds_data_dir}GBM_earlyStage_scSeq_annotated_cell2location.h5ad")
 print("Successfully created GBM_earlyStage_scSeq_annotated_cell2location.h5ad")
 
 print("removing GBM_counts.csv, GBM_metadata.csv, GBM_genes.csv")
-os.remove(f"{project_dir}rds_data/GBM_counts.csv")
-os.remove(f"{project_dir}rds_data/GBM_metadata.csv")
-os.remove(f"{project_dir}rds_data/GBM_genes.csv")
+os.remove(f"{rds_data_dir}GBM_counts.csv")
+os.remove(f"{rds_data_dir}GBM_metadata.csv")
+os.remove(f"{rds_data_dir}GBM_genes.csv")
 
 # Print summary
 print(f"\nSummary:")

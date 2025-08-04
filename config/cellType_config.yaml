@@ -5,25 +5,24 @@
 
 # Input/Output Paths
 paths:
-  reference_output: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/cellType/gbm_analysis/reference_signatures'
   reference_data: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/cellType/gbm_analysis/reference_signatures/sc_ref.h5ad'
-  spatial_data: 'KD_rds_data/KD_3Runs_merged_merged.h5ad'
-  results_folder: 'cellType/gbm_analysis'
-  spatial_output: 'cellType/gbm_analysis/cell2location_map'
-  cell_abundance_results: 'KD_output/cell_type_prediction/cell2location_results'
-  cell_abundance_heatmap_path: 'KD_output/cell_type_prediction/cell2location_results/cell_abundance_heatmap'
-  nmf_models: 'KD_output/cell_type_prediction/cell2location_results/nmf_models'
-  nmf_analysis_path: 'KD_output/cell_type_prediction/cell2location_results/nmf_analysis'
-  dge_results_across_sample: 'KD_output/differential_expression/cell_type_comparisons/dge_results_across_sample'
-  dge_results_within_sample: 'KD_output/differential_expression/cell_type_comparisons/dge_results_within_sample'
-  dge_csv_combine: 'KD_output/differential_expression/cell_type_comparisons'
-  dge_report: 'KD_output/html_reports/report_cellType_dge_presentations'
-  cell_population_reports: 'KD_output/html_reports/report_cell_population'
-  nmf_reports: 'KD_output/html_reports/report_nmf_analysis'
+  spatial_data: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/rds_data/DIPG_B7_expr_six_merged_merged.h5ad'
+  results_folder: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/cellType/gbm_analysis'
+  reference_output: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/cellType/gbm_analysis/reference_signatures'
+  spatial_output: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/cellType/gbm_analysis/cell2location_map'
+  cell_abundance_heatmap_path: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cell_type_prediction/cell2location_results/cell_abundance_heatmap'
+  nmf_models: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cell_type_prediction/cell2location_results/nmf_models'
+  nmf_analysis_path: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cell_type_prediction/cell2location_results/nmf_analysis'
+  dge_results_across_sample: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/differential_expression/cell_type_comparisons/dge_results_across_sample'
+  dge_results_within_sample: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/differential_expression/cell_type_comparisons/dge_results_within_sample'
+  dge_csv_combine: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/differential_expression/cell_type_comparisons'
+  dge_report: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/html_reports/report_cellType_dge_presentations'
+  cell_population_reports: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/html_reports/report_cell_population'
+  nmf_reports: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/html_reports/report_nmf_analysis'
   # Output paths for combined cell type DGE results (used when combine_cell_types: true)
-  dge_results_across_sample_combined: 'KD_output/differential_expression/combine_cell_type_comparisons/dge_results_across_sample'
-  dge_results_within_sample_combined: 'KD_output/differential_expression/combine_cell_type_comparisons/dge_results_within_sample'
-  dge_csv_combine_combined: 'KD_output/differential_expression/combine_cell_type_comparisons'
+  dge_results_across_sample_combined: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/differential_expression/combine_cell_type_comparisons/dge_results_across_sample'
+  dge_results_within_sample_combined: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/differential_expression/combine_cell_type_comparisons/dge_results_within_sample'
+  dge_csv_combine_combined: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/differential_expression/combine_cell_type_comparisons'
 
 
 # Dataset Configuration
@@ -35,12 +34,19 @@ dataset:
   
   # Column names in spatial data
   sample_batch_key: 'batch'
+  available_slices:
+    - "B7_ADI_127891"
+    - "B7_ADI_12890R1"
+    - "B7_ADI_130660"
+    - "B7_SAL_127891"
+    - "B7_SAL_12789R1"
+    - "B7_SAL_130659"
   
   # Dataset splitting parameters for multi-machine training
   splitting:
     enable_splitting: true  # Set to false to use original subsample behavior
     batch_size: 8000  # Number of cells per batch (should be <= max_cells)
-    split_data_dir: 'cellType/gbm_analysis/split_datasets'  # Directory to save split datasets
+    split_data_dir: '/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/cellType/gbm_analysis/split_datasets'  # Directory to save split datasets
     overlap_cells: 500  # Number of overlapping cells between batches (0 for no overlap)
 
 # Shared Analysis Configuration
@@ -68,6 +74,22 @@ shared:
 
   # Target cell types for DGE analysis when not combining
   target_cell_types: ['Astrocytes', 'Astrocytes1', 'Astrocytes2', 'Astrocytes3', 'Astrocytes.Proliferating', 'Bcells', 'CAF', 'CAFs', 'DC', 'DC1', 'DC2', 'DC3', 'DC.Proliferating', 'Effector.&.Inhibitory.CD8.T', 'Effector.CD8.T', 'Effector.Memory.CD4.T', 'Effector.Memory.CD8.T', 'Endothelial', 'Gamma.delta.T', 'Immature.Oligo', 'Lineage.neg.CD4.T', 'MAST', 'MDM.Disease.Associated', 'MDM.Pro.Inflammatory', 'MDM.Proliferating', 'Mast', 'Mature.Oligo', 'Memory.CD8.T', 'Microglia.Disease.Associated', 'Microglia.Homeostatic', 'Microglia.Interferon.Responsive', 'Microglia.Proliferating', 'Monocytes', 'NK', 'NKT', 'Naive.CD4.T', 'Naive.CD8.T', 'Neuron1', 'Neuron2', 'Neutrophils', 'Oligodendrocyte', 'Plasma', 'Regulatory.CD4.T', 'Stemlike.CD4.T', 'Stemlike.CD8.T', 'T.Proliferating', 'Terminal.Effector.CD8.T', 'Tumor', 'pDC']
+  
+  # Cross-sample comparisons
+  cross_sample_comparisons:
+    - ['B7_ADI_127891', 'B7_SAL_127891']
+    - ['B7_ADI_12890R1', 'B7_SAL_12789R1']
+    - ['B7_ADI_130660', 'B7_SAL_130659']
+
+  
+  # Within-sample groups
+  within_sample_groups:
+    - "B7_ADI_127891"
+    - "B7_ADI_12890R1"
+    - "B7_ADI_130660"
+    - "B7_SAL_127891"
+    - "B7_SAL_12789R1"
+    - "B7_SAL_130659"
 
   # Quantile settings
   quantiles:
@@ -130,7 +152,6 @@ dge_analysis:
   n_top_genes_per_group: 1000 # Number of top DEGs to identify per comparison
   use_raw_counts_cell_type_dge: false # Use adata.raw for DGE by cell type abundance
   use_raw_counts_nmf_dge: false # Use adata.raw for DGE by NMF groups
-  skip_existing_dge_results: true # Set to true to skip DGE if result files exist
 
 # NMF Colocalization Analysis Parameters
 nmf_analysis:
@@ -196,3 +217,4 @@ local_report:
       pdf_pattern: "{output_dir}/{batch}_nmf_analysis_spatial_density.pdf"
       layout_rows: 3
       layout_cols: 2
+

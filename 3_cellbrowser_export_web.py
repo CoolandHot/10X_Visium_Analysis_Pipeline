@@ -45,7 +45,6 @@ class CellBrowserExporter:
             Configuration dictionary with analysis parameters
         """
         self.config = config
-        self.project_dir = Path(config["project_dir"])
         self.cellbrowser_config = config.get("cellbrowser", {})
 
         # Create Cell Browser output directory
@@ -257,11 +256,11 @@ class CellBrowserExporter:
         """Find h5ad file in expected locations"""
         # Look for common h5ad file patterns
         possible_paths = [
-            Path("./rds_data")
+            Path(self.config['rds_data_dir'])
             / f"{self.config['output_file_prefix']}_merged.h5ad",
-            Path("./rds_data")
+            Path(self.config['rds_data_dir'])
             / f"{self.config['output_file_prefix']}_banksy_merged.h5ad",
-            Path("./rds_data")
+            Path(self.config['rds_data_dir'])
             / f"{self.config['output_file_prefix']}_BayesSpace_merged.h5ad",
         ]
 
@@ -270,7 +269,7 @@ class CellBrowserExporter:
                 return path
 
         # Look for any h5ad files in output directory
-        h5ad_files = list(Path("./rds_data").glob("*.h5ad"))
+        h5ad_files = list(Path(self.config['rds_data_dir']).glob("*.h5ad"))
         if h5ad_files:
             return h5ad_files[0]
 
@@ -1041,11 +1040,11 @@ def main():
 
     # ===========================================================
     # === Check for combine_cell_types and export combined cell types ===
-    # Load cellType/config.yaml for combine_cell_types and combinations
+    # Load config/cellType_config.yaml for combine_cell_types and combinations
 
-    celltype_config_path = Path("cellType/config.yaml")
+    celltype_config_path = Path("config/cellType_config.yaml")
     if not celltype_config_path.exists():
-        print("Could not find cellType/config.yaml, skipping combined cell type export.")
+        print("Could not find config/cellType_config.yaml, skipping combined cell type export.")
         return
 
     with open(celltype_config_path, "r") as f:
@@ -1055,7 +1054,7 @@ def main():
     cell_type_combinations = celltype_config.get("shared", {}).get("cell_type_combinations", {})
 
     if combine_cell_types and cell_type_combinations:
-        print("combine_cell_types is enabled in cellType/config.yaml, exporting combined cell type abundances for Cell Browser...")
+        print("combine_cell_types is enabled in config/cellType_config.yaml, exporting combined cell type abundances for Cell Browser...")
 
         # Load the original cell abundance CSV
         abundances_csv_path = config.get("cellbrowser", {}).get(

@@ -9,47 +9,42 @@ on_disk:
   qc_min_genes: 100 # Minimum number of genes expressed in a cell
   qc_min_cells: 10 # Minimum number of cells for a gene to be considered expressed
 
+
+# -------------------
+# Data Input/Output
+# -------------------
 # Directory where your raw 10X data is stored
-raw_data_dir: "/vol/research/brainTumorST/10X_Genomics_KD/"
-# Directory to save RDS files
-rds_data_dir: "/scratch/hh01116/10X_KD/KD_rds_data/"
+raw_data_dir: "/scratch/hh01116/10X_DIPG_data/" # otter08
+rds_data_dir: "/scratch/hh01116/10X_DIPG_data/rds_data/"
 # Directory to save processed data and results
-project_dir: "./"
+project_dir: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/"
 # Prefix for the output files
-output_file_prefix: "KD_3Runs_merged"
+output_file_prefix: "DIPG_B7_expr_six_merged"
+
 # Names of the batch files (directories for VisiumHD, h5 files for standard Visium)
-batch_file_h5_names: # for non-VisiumHD
 batch_file_names:
-  - "Run 1 - 22-08-24/118512-NM_bam"
-  - "Run 1 - 22-08-24/118513-L1_bam"
-  - "Run 1 - 22-08-24/118514R1_1_bam"
-  - "Run 1 - 22-08-24/118515R1_4_bam"
-  - "Run 2 - 11-10-24/118512L1_5" # very low total counts
-  - "Run 2 - 11-10-24/118513R1_1" # very low total counts
-  - "Run 2 - 11-10-24/118515L1_1"
-  - "Run 2 - 11-10-24/121729NM_1"
-  - "Run 3 - 14-11-24/118512-R13"
-  - "Run 3 - 14-11-24/118513-NM2"
-  - "Run 3 - 14-11-24/118514-NM4"
-  - "Run 3 - 14-11-24/118515-NM4"
+  - "B7_expr/127891-R2-1"
+  - "B7_expr/12890R1-5"
+  - "B7_expr/130660-NM-5"
+  - "B7_expr/127891-L1-4"
+  - "B7_expr/12789R1-1"
+  - "B7_expr/130659-NM-1"
+  # - "C2_expr/123124L1_2"
+  # - "C2_expr/123123R1L1_1"
+batch_file_h5_names: # for non-VisiumHD
+  # - "IMP002_filtered_feature_bc_matrix.h5"
+  # - "IMP023_filtered_feature_bc_matrix.h5"
+  # - "9912-IMP031_filtered_feature_bc_matrix.h5"
+  # - "IMP028_filtered_feature_bc_matrix.h5"
 batch_names:
-  - "Run1_SAL"    # total counts = 96501753
-  - "Run1_KD"     # total counts = 54839364
-  - "Run1_RAD"    # total counts = 78257855
-  - "Run1_COMB"   # total counts = 105665564
-  - "Run2_SAL"    # total counts = 11428641
-  - "Run2_KD"     # total counts = 6727992
-  - "Run2_COMB"   # total counts = 56695713
-  - "Run2_RAD"    # total counts = 60861489
-  - "Run3_SAL"    # total counts = 47166975
-  - "Run3_KD"     # total counts = 42413396
-  - "Run3_RAD"    # total counts = 60471126
-  - "Run3_COMB"   # total counts = 45023077
-inspect_replicates: # inspect the replicates in the same batch, using PCA plot
-  - ["Run1_SAL", "Run2_SAL", "Run3_SAL"]
-  - ["Run1_KD", "Run2_KD", "Run3_KD"]
-  - ["Run1_RAD", "Run2_RAD", "Run3_RAD"]
-  - ["Run1_COMB", "Run2_COMB", "Run3_COMB"]
+# last batch name being the control group
+  - "B7_ADI_127891"
+  - "B7_ADI_12890R1"
+  - "B7_ADI_130660"
+  - "B7_SAL_127891"
+  - "B7_SAL_12789R1"
+  - "B7_SAL_130659"
+
 
 # Script orders: 
 # 1. 1_VisiumHD_read_merge_cluster.r
@@ -72,16 +67,10 @@ Differential_Gene_Analysis:
   edgeTumour_cluster_nums: []
   
   across_batch_comparisons: # the latter one is the control group
-    - ["Run1_KD", "Run1_SAL"]
-    - ["Run1_RAD", "Run1_SAL"]
-    - ["Run1_COMB", "Run1_SAL"]
-    - ["Run2_KD", "Run2_SAL"]
-    - ["Run2_RAD", "Run2_SAL"]
-    - ["Run2_COMB", "Run2_SAL"]
-    - ["Run3_KD", "Run3_SAL"]
-    - ["Run3_RAD", "Run3_SAL"]
-    - ["Run3_COMB", "Run3_SAL"]
-
+    - ["B7_ADI_127891", "B7_SAL_127891"]
+    - ["B7_ADI_130660", "B7_SAL_12789R1"]
+    - ["B7_ADI_130660", "B7_SAL_127891"]
+    - ["B7_ADI_127891", "B7_SAL_12789R1"]
 
 
 # 6. [optional] ./TFA/*
@@ -97,69 +86,68 @@ Differential_Gene_Analysis:
 # Output directory structure
 output_dirs:
   # Core clustering outputs
-  clustering: "KD_output/clustering/"
-  clustering_umap_spatial: "KD_output/clustering/clusters_umap_spatial/"
-  clustering_markers: "KD_output/clustering/markers/"
-  clustering_spatialAware: "KD_output/clustering/spatial_aware_clustering/"
+  clustering: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/clustering/"
+  clustering_umap_spatial: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/clustering/clusters_umap_spatial/"
+  clustering_markers: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/clustering/markers/"
+  clustering_spatialAware: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/clustering/spatial_aware_clustering/"
   
   # Cell type prediction outputs
-  cell_type: "KD_output/cell_type_prediction/"
-  cell_type_spacexr: "KD_output/cell_type_prediction/spaceXR_results/"
-  cell_type_cell2loc: "KD_output/cell_type_prediction/cell2location_results/"
-  cell_type_deconv: "KD_output/cell_type_prediction/deconvoluted_objects/"
-  cell_type_viz: "KD_output/cell_type_prediction/visualizations/"
+  cell_type: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cell_type_prediction/"
+  cell_type_spacexr: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cell_type_prediction/spaceXR_results/"
+  cell_type_cell2loc: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cell_type_prediction/cell2location_results/"
+  cell_type_deconv: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cell_type_prediction/deconvoluted_objects/"
+  cell_type_viz: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cell_type_prediction/visualizations/"
   
   # Differential expression outputs
-  deg: "KD_output/differential_expression/"
-  deg_clusters: "KD_output/differential_expression/cluster_comparisons/"
-  deg_celltypes: "KD_output/differential_expression/cell_type_comparisons/"
-  deg_combine_celltypes: "KD_output/differential_expression/combine_cell_type_comparisons/"
+  deg: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/differential_expression/"
+  deg_clusters: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/differential_expression/cluster_comparisons/"
+  deg_celltypes: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/differential_expression/cell_type_comparisons/"
+  deg_combine_celltypes: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/differential_expression/combine_cell_type_comparisons/"
   
-  pathway_analysis_clusters: "KD_output/pathway_analysis_clusters/"
-  pathway_analysis_clusters_plots: "KD_output/pathway_analysis_clusters/plots/"
-  pathway_analysis_celltypes: "KD_output/pathway_analysis_celltypes/"
-  pathway_analysis_celltypes_plots: "KD_output/pathway_analysis_celltypes/plots/"
-  pathway_analysis_combine_celltypes: "KD_output/pathway_analysis_combine_celltypes/"
-  pathway_analysis_combine_celltypes_plots: "KD_output/pathway_analysis_combine_celltypes/plots/"
+  pathway_analysis_clusters: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/pathway_analysis_clusters/"
+  pathway_analysis_clusters_plots: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/pathway_analysis_clusters/plots/"
+  pathway_analysis_celltypes: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/pathway_analysis_celltypes/"
+  pathway_analysis_celltypes_plots: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/pathway_analysis_celltypes/plots/"
+  pathway_analysis_combine_celltypes: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/pathway_analysis_combine_celltypes/"
+  pathway_analysis_combine_celltypes_plots: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/pathway_analysis_combine_celltypes/plots/"
 
 
   # Transcription factor activity outputs
-  tfa: "KD_output/transcription_factor_activity/"
-  tfa_activities: "KD_output/transcription_factor_activity/TF_activities/"
-  tfa_features: "KD_output/transcription_factor_activity/feature_importance/"
-  tfa_heatmaps: "KD_output/transcription_factor_activity/heatmaps/"
+  tfa: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/transcription_factor_activity/"
+  tfa_activities: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/transcription_factor_activity/TF_activities/"
+  tfa_features: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/transcription_factor_activity/feature_importance/"
+  tfa_heatmaps: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/transcription_factor_activity/heatmaps/"
   
   # Manual labelling outputs
-  manual_label: "KD_output/manual_labelling/"
-  manual_counts: "KD_output/manual_labelling/exported_counts/"
-  manual_assignments: "KD_output/manual_labelling/cluster_assignments/"
-  manual_immune: "KD_output/manual_labelling/immune_analysis/"
-  manual_markers: "KD_output/manual_labelling/marker_analysis/"
+  manual_label: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/manual_labelling/"
+  manual_counts: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/manual_labelling/exported_counts/"
+  manual_assignments: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/manual_labelling/cluster_assignments/"
+  manual_immune: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/manual_labelling/immune_analysis/"
+  manual_markers: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/manual_labelling/marker_analysis/"
   
   # 10X Loupe browser files
-  loupe: "KD_output/loupe_files/"
+  loupe: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/loupe_files/"
 
 
 
-
-cellbrowser_html_output_dir: "KD_output/html_reports/cellbrowser"
+cellbrowser_html_output_dir: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/html_reports/cellbrowser"
 # Cell Browser export settings
 cellbrowser:
   # Cluster file paths for Cell Browser export, no need to prefix ./output/
   cluster_files:
-    banksy_cellTypes: "KD_output/clustering/banksy_cluster_cell2location.csv"
-    banksy: "KD_output/clustering/banksy_cluster.csv" 
-    BayesSpace: "KD_output/clustering/BayesSpace_cluster.csv"
-    BayesSpace_cellTypes: "KD_output/clustering/BayesSpace_cluster_cell2location.csv"
+    banksy_cellTypes: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/clustering/banksy_cluster_cell2location.csv"
+    banksy: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/clustering/banksy_cluster.csv" 
+    BayesSpace: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/clustering/BayesSpace_cluster.csv"
+    BayesSpace_cellTypes: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/clustering/BayesSpace_cluster_cell2location.csv"
 
-  cellbrowser_dir: "KD_output/cellbrowser_geneExpr"
-  color_field: "banksy_cellTypes"
-  label_field: "banksy_cellTypes"
-  enum_fields: ["banksy_cellTypes", "banksy", "batch"]
-  quick_genes: ["CD3", "CD4", "CD8a", "CD20", "CD11c", "HLA-DR", "CD68", "CD163", "P2Y12", "CD16", "CD14", "CD94", "MPO", "SOX2", "SOX9", "FOXP3", "CD117", "OLIG2", "PanCK", "PMEL", "CD31", "Claudin-5", "CD45", "MelanA", "Ki67", "CC3", "GFAP", "OX40L", "MMP9", "pERK", "pSTAT3", "HIF1a", "CD206", "CD39", "CD40", "CIRBP", "191Ir", "193Ir", "M-CSF-R", "GM-CSF-R", "PD-L1","PD-1", "CTLA-4", "Arg1", "IDO1", "Cd3e", "Nestin", "Olig1", "Sox11", "Pdgfra"]
+  cellbrowser_dir: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cellbrowser_geneExpr"
+  color_field: "banksy"
+  label_field: "banksy"
+  enum_fields: ["banksy", "banksy_cellTypes", "batch"]
+  quick_genes: ["Arg1", "IDO1", "Cd45", "Cd3e", "Cd8a", "Cd4", "Foxp3", "Gfap", "Nestin", "Gfp", "Rfp", "Egfr"]
 
-  cell_abundances_dir: "KD_output/cellbrowser_cellTypes"
-  cell_abundances_csv: "KD_output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv"
+  cell_abundances_dir: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cellbrowser_cellTypes"
+  cell_abundances_csv: "/vol/research/scratch1/NOBACKUP/hh01116/10X_DIPG/output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv"
   color_field_cell2location: "banksy_cellTypes"
   label_field_cell2location: "banksy_cellTypes" 
   enum_fields_cell2location: ["banksy_cellTypes", "batch"]

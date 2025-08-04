@@ -10,12 +10,12 @@ dir.create(output_rds.dir, recursive = TRUE)
 library(Seurat)
 library(ggplot2)
 
-config <- yaml::read_yaml(paste0(raw.data.dir, "config/batch_config.yaml"))
+config <- yaml::read_yaml(paste0(project_dir, "config/batch_config.yaml"))
 batch_names <- config$batch_names
 output.file.prefix <- config$output_file_prefix
 VisiumHD <- config$VisiumHD
 
-merged_obj <- readRDS(paste0(raw.data.dir, "rds_data/", output.file.prefix, "_merged.rds"))
+merged_obj <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged.rds"))
 merged_obj_list <- SplitObject(merged_obj, split.by = "batch")
 
 for (batch_id in batch_names) {

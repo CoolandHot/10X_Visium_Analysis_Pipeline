@@ -15,13 +15,14 @@ import shutil
 class ReportGenerator:
     """Generates interactive HTML5 reports for spatial transcriptomics analysis"""
     
-    def __init__(self, config_path='batchName_config.yml'):
+    def __init__(self, config_path='config/batch_config.yaml'):
         """Initialize with configuration"""
         self.base_dir = Path(__file__).parent
         self.config = self._load_config(config_path)
+        self.project_dir = Path(self.config.get('project_dir', self.base_dir))
         # Use cellbrowser_html_output_dir from config if available
         self.cellbrowser_html_output_dir = Path(self.config.get('cellbrowser_html_output_dir', "output/html_reports/cellbrowser"))
-        self.report_dir = self.base_dir / "output" / "html_reports"
+        self.report_dir = self.project_dir / "output" / "html_reports"
         self.report_dir.mkdir(exist_ok=True)
         
         # Extract cluster IDs for DGE intro
@@ -69,7 +70,7 @@ class ReportGenerator:
     
     def _copy_visualization_tools(self):
         """Copy visualization tools to html_reports directory if not exists, excluding specific files."""
-        viz_tools_src = self.base_dir.parent / "visualisation_tools"
+        viz_tools_src = self.project_dir.parent / "visualisation_tools"
         viz_tools_dest = self.report_dir / "visualisation_tools"
         
         if viz_tools_src.exists() and not viz_tools_dest.exists():
@@ -283,45 +284,45 @@ class ReportGenerator:
         return [
             # Data
             {
-                "title": f"Within-/Cross-Sample {data_name} {"Combined" if is_combined else ""} Data{combined_title_suffix}",
+                "title": f"Within-/Cross-Sample {data_name} {'Combined' if is_combined else ''} Data{combined_title_suffix}",
                 "description": f"Differential comparison between sample groups ({data_cross_desc}, etc.); within-sample comparisons ({data_within_desc}, etc.){combined_desc_suffix}",
                 "pattern": "**/merged_*.csv",
                 "subdirs": [base_dir], "exclude_subdirs": [], "exclude_patterns": []
             },
             # Within-Sample
             {
-                "title": f"Within-Sample {data_name} {"Combined" if is_combined else ""} Visualizations on H&E images",
+                "title": f"Within-Sample {data_name} {'Combined' if is_combined else ''} Visualizations on H&E images",
                 "description": within_viz_he_desc,
                 "pattern": "**/*.pdf",
                 "subdirs": [os.path.join(base_dir, 'dge_results_within_sample')], "exclude_subdirs": [], "exclude_patterns": []
             },
             {
-                "title": f"Within-Sample {data_name} {"Combined" if is_combined else ""} Inspective Visualizations",
+                "title": f"Within-Sample {data_name} {'Combined' if is_combined else ''} Inspective Visualizations",
                 "description": f"In ADI, {viz_within_desc}, etc. Volcano plots, boxplots, and scatter plots to inspect the differential expression results.",
                 "pattern": "**/*.pdf",
                 "subdirs": [os.path.join(base_dir, 'inspection_plots_pdf', 'within_sample')], "exclude_subdirs": [], "exclude_patterns": []
             },
             {
-                "title": f"Within-Sample {data_name} {"Combined" if is_combined else ""} Inspective Visualizations Data",
+                "title": f"Within-Sample {data_name} {'Combined' if is_combined else ''} Inspective Visualizations Data",
                 "description": f"In ADI, {viz_within_desc}, etc. The data in csv format for the inspective visualizations.",
                 "pattern": "**/*.csv",
                 "subdirs": [os.path.join(base_dir, 'inspection_plot_data', 'within_sample')], "exclude_subdirs": [], "exclude_patterns": []
             },
             # Cross-Sample
             {
-                "title": f"Cross-Sample {data_name} {"Combined" if is_combined else ""} Visualizations on H&E images",
+                "title": f"Cross-Sample {data_name} {'Combined' if is_combined else ''} Visualizations on H&E images",
                 "description": cross_viz_he_desc,
                 "pattern": "**/*.pdf",
                 "subdirs": [os.path.join(base_dir, 'dge_results_across_sample')], "exclude_subdirs": [], "exclude_patterns": []
             },
             {
-                "title": f"Cross-Sample {data_name} {"Combined" if is_combined else ""} Inspective Visualizations",
+                "title": f"Cross-Sample {data_name} {'Combined' if is_combined else ''} Inspective Visualizations",
                 "description": f"{viz_cross_desc}, etc. Volcano plots, boxplots, and scatter plots to inspect the differential expression results.",
                 "pattern": "**/*.pdf",
                 "subdirs": [os.path.join(base_dir, 'inspection_plots_pdf', 'across_sample')], "exclude_subdirs": [], "exclude_patterns": []
             },
             {
-                "title": f"Cross-Sample {data_name} {"Combined" if is_combined else ""} Inspective Visualizations Data",
+                "title": f"Cross-Sample {data_name} {'Combined' if is_combined else ''} Inspective Visualizations Data",
                 "description": f"{viz_cross_desc}, etc. The data in csv format for the inspective visualizations.",
                 "pattern": "**/*.csv",
                 "subdirs": [os.path.join(base_dir, 'inspection_plot_data', 'across_sample')], "exclude_subdirs": [], "exclude_patterns": []
@@ -504,8 +505,14 @@ class ReportGenerator:
                 card_class += " disabled"
                 section['description'] += " (Tool not available - check if visualisation_tools directory exists)"
             
+            # Build onclick string safely
+            if file_exists:
+                onclick_str = f"window.open('{section['file']}', '_blank')"
+            else:
+                onclick_str = "alert('Visualization tool not found. Please ensure visualisation_tools directory exists.')"
+            
             nav_cards += f"""
-            <div class="{card_class}" onclick="{'window.open(\'' + section['file'] + '\', \'_blank\')' if file_exists else 'alert(\'Visualization tool not found. Please ensure visualisation_tools directory exists.\')'}">
+            <div class="{card_class}" onclick="{onclick_str}">
                 <div class="nav-icon">{section['icon']}</div>
                 <h3>{section['title']}</h3>
                 <p>{section['description']}</p>
@@ -667,14 +674,14 @@ class ReportGenerator:
         try:
             celltype_config_path = self.base_dir / "config" / "cellType_config.yaml"
             with open(celltype_config_path, 'r') as f:
-                import yaml
                 celltype_config = yaml.safe_load(f)
                 cell_type_combinations = celltype_config.get('shared', {}).get('cell_type_combinations', {})
                 cell_types = celltype_config.get('shared', {}).get('target_cell_types', [])
 
                 if cell_type_combinations:
-                    other_cell_types = set(cell_types) - set(cell_type_combinations.values())
-                    cell_types = list(cell_type_combinations.keys()) + list(other_cell_types)
+                    other_cell_types = [ct for ct in cell_types if ct not in [
+                        item for sublist in cell_type_combinations.values() for item in sublist]]
+                    cell_types = list(cell_type_combinations.keys()) + other_cell_types
                     
         except Exception as e:
             print(f"Warning: Could not load cell type config: {e}")
@@ -1429,7 +1436,7 @@ class ReportGenerator:
         def is_excluded(path):
             for exdir in exclude_subdirs:
                 try:
-                    if exdir and (self.base_dir / exdir) in path.parents:
+                    if exdir and (self.project_dir / exdir) in path.parents:
                         return True
                 except Exception:
                     continue
@@ -1442,7 +1449,7 @@ class ReportGenerator:
             for subdir in subdirs:
                 if isinstance(subdir, str):
                     if not Path(subdir).is_absolute():
-                        subdir = self.base_dir / subdir
+                        subdir = self.project_dir / subdir
                     else:
                         subdir = Path(subdir)
                     if subdir.exists():

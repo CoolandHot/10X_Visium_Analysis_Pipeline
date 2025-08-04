@@ -4,9 +4,9 @@ library(ggplot2)
 library(reshape2)
 require(Matrix)
 
-scdata <- readRDS("rds_data/DIPG_B7_expr_six_merged_clustered_12k.rds")
+scdata <- readRDS("DIPG_B7_expr_six_merged_clustered_12k.rds")
 # gene_counts <- colSums(scdata@assays$RNA@counts)
-gene_counts_array <- Seurat::GetAssayData(scdata, layer = "counts") 
+gene_counts_array <- Seurat::GetAssayData(scdata, layer = "counts")
 gene_counts <- colSums(gene_counts_array)
 
 cell_abundance <- read.csv("output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv", row.names = 1)
