@@ -1,8 +1,8 @@
 source("util_headers.r")
 
-source(paste0(project_dir, "spatial_clustering", "/", "clustering_DPNBVI_0_utils.r"))
+source(paste0("./spatial_clustering/", "clustering_DPNBVI_0_utils.r"))
 
-csv_filenames <- yaml::read_yaml(paste0(project_dir, "spatial_clustering", "/", "cluster_DPNBVI_config.yaml"))
+csv_filenames <- yaml::read_yaml(paste0("./spatial_clustering/", "cluster_DPNBVI_config.yaml"))
 
 
 merged_obj <- readRDS(paste0(

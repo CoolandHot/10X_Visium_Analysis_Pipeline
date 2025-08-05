@@ -5,7 +5,7 @@
 !*.py
 !*.md
 !*.sh
-!.vscode
+!.vscode/*.json
 
 # Exclude config
 !config

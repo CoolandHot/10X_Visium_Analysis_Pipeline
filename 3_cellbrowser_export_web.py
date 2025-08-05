@@ -995,7 +995,8 @@ def main():
         config = yaml.safe_load(f)
 
     # Get cellbrowser_html_output_dir from config, fallback to default if missing
-    cellbrowser_html_output_dir = Path(config.get("cellbrowser_html_output_dir", "output/html_reports/cellbrowser")).resolve()
+    html_reports_dir = Path(config.get('html_reports_dir', "output/html_reports")).resolve()
+    cellbrowser_html_output_dir = html_reports_dir / "cellbrowser"
 
     # ===========================================================
     # ===== Create an exporter for gene expression data =====

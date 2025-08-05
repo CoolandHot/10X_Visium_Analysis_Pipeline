@@ -4,10 +4,10 @@
 # ================================================
 
 source("util_headers.r")
-source(paste0(project_dir, "cluster_labelling/cluster_labelling_utils.r"))
+source(paste0("./cluster_labelling/cluster_labelling_utils.r"))
 
 # Read cell2location results
-cell2loc_data <- read.csv(paste0(project_dir, "output/cell_type_prediction/cell2location_results/cell_abundances_and_clusters.csv"),
+cell2loc_data <- read.csv(paste0(output_dirs$cell_type_cell2loc, "cell_abundances_and_clusters.csv"),
     stringsAsFactors = FALSE, row.names = 1
 )
 

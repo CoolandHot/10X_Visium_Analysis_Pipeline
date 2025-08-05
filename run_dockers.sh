@@ -6,8 +6,6 @@ podman run --rm -it \
     -w $(pwd) \
     container-registry.surrey.ac.uk/shared-containers/bioinformatics-r-seurat5-with-recommended-pkgs
 
-    container-registry.surrey.ac.uk/shared-containers/bioinformatics-miniconda-r44-seurat-5-mini
-
     container-registry.surrey.ac.uk/shared-containers/bioinformatics-r-seurat-5-for-transcription-factor-analysis
 
 

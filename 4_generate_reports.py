@@ -21,9 +21,9 @@ class ReportGenerator:
         self.config = self._load_config(config_path)
         self.project_dir = Path(self.config.get('project_dir', self.base_dir))
         # Use cellbrowser_html_output_dir from config if available
-        self.cellbrowser_html_output_dir = Path(self.config.get('cellbrowser_html_output_dir', "output/html_reports/cellbrowser"))
-        self.report_dir = self.project_dir / "output" / "html_reports"
-        self.report_dir.mkdir(exist_ok=True)
+        self.html_reports_dir = Path(self.config.get('html_reports_dir', "output/html_reports"))
+        self.cellbrowser_html_output_dir = self.html_reports_dir / "cellbrowser"
+        self.html_reports_dir.mkdir(exist_ok=True)
         
         # Extract cluster IDs for DGE intro
         dge = self.config.get('Differential_Gene_Analysis', {})
@@ -71,7 +71,7 @@ class ReportGenerator:
     def _copy_visualization_tools(self):
         """Copy visualization tools to html_reports directory if not exists, excluding specific files."""
         viz_tools_src = self.project_dir.parent / "visualisation_tools"
-        viz_tools_dest = self.report_dir / "visualisation_tools"
+        viz_tools_dest = self.html_reports_dir / "visualisation_tools"
         
         if viz_tools_src.exists() and not viz_tools_dest.exists():
             try:
@@ -113,8 +113,8 @@ class ReportGenerator:
         # Generate individual section reports
         self._generate_section_reports()
         
-        print(f"Reports generated in: {self.report_dir}")
-        print(f"Open {self.report_dir}/index.html to view the main navigation")
+        print(f"Reports generated in: {self.html_reports_dir}")
+        print(f"Open {self.html_reports_dir}/index.html to view the main navigation")
 
     def _generate_section_reports(self):
         """Generate all reports"""
@@ -496,7 +496,7 @@ class ReportGenerator:
             # Check if file exists for visualization tools
             file_exists = True
             if section['file'].startswith('visualisation_tools/'):
-                file_path = self.report_dir / section['file']
+                file_path = self.html_reports_dir / section['file']
                 file_exists = file_path.exists()
             
             # Add disabled class if file doesn't exist
@@ -551,7 +551,7 @@ class ReportGenerator:
         html_content = html_content.replace("{{EXTRA_JS}}", extra_js)
         html_content = html_content.replace("{{CONTENT}}", content)
         
-        with open(self.report_dir / "index.html", 'w') as f:
+        with open(self.html_reports_dir / "index.html", 'w') as f:
             f.write(html_content)
     
     def _generate_section_report(self, filename, title, file_sections, intro_text):
@@ -618,7 +618,7 @@ class ReportGenerator:
         html_content = html_content.replace("{{EXTRA_JS}}", extra_js)
         html_content = html_content.replace("{{CONTENT}}", content)
         
-        with open(self.report_dir / filename, 'w') as f:
+        with open(self.html_reports_dir / filename, 'w') as f:
             f.write(html_content)
 
     def _generate_dge_report(self, filename, title, file_sections, intro_text):
@@ -816,7 +816,7 @@ class ReportGenerator:
         html_content = html_content.replace("{{EXTRA_JS}}", extra_js)
         html_content = html_content.replace("{{CONTENT}}", content)
         
-        with open(self.report_dir / filename, 'w') as f:
+        with open(self.html_reports_dir / filename, 'w') as f:
             f.write(html_content)
 
     def _get_dge_report_css(self):
@@ -1448,10 +1448,7 @@ class ReportGenerator:
         if subdirs:
             for subdir in subdirs:
                 if isinstance(subdir, str):
-                    if not Path(subdir).is_absolute():
-                        subdir = self.project_dir / subdir
-                    else:
-                        subdir = Path(subdir)
+                    subdir = Path(subdir)
                     if subdir.exists():
                         for f in subdir.glob(pattern):
                             if not is_excluded(f):
@@ -1471,7 +1468,7 @@ class ReportGenerator:
             file_size = self._get_file_size(file_path)
             
             try:
-                relative_path = file_path.relative_to(self.report_dir.parent)
+                relative_path = file_path.relative_to(self.html_reports_dir.parent)
             except ValueError:
                 relative_path = file_path
             
@@ -1482,7 +1479,7 @@ class ReportGenerator:
                 # Generate thumbnail if not exists
                 thumb_path = self._get_pdf_thumbnail(file_path)
                 if thumb_path and thumb_path.exists():
-                    thumb_rel = thumb_path.relative_to(self.report_dir.parent)
+                    thumb_rel = thumb_path.relative_to(self.html_reports_dir.parent)
                     thumb_url = f"../{thumb_rel}"
                     preview_html = f'<img src="{thumb_url}" alt="PDF thumbnail" class="pdf-thumb-img" style="width:100%;height:100%;object-fit:contain;background:#fff;">'
                 else:
@@ -1543,7 +1540,7 @@ class ReportGenerator:
     def _get_pdf_thumbnail(self, pdf_path):
         """Export first page of PDF as PNG thumbnail, return thumbnail path"""
         try:
-            thumb_dir = self.report_dir / "pdf_thumbnails"
+            thumb_dir = self.html_reports_dir / "pdf_thumbnails"
             thumb_dir.mkdir(exist_ok=True)
             thumb_path = thumb_dir / (pdf_path.stem + ".png")
             if not thumb_path.exists():
