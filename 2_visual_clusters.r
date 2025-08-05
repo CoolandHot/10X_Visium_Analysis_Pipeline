@@ -2,13 +2,15 @@ source("util_headers.r")
 
 merged_obj <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged_clustered.rds"))
 
-
+target_assay <- ifelse(VisiumHD, "sketch", "Spatial")
 
 # ================= SPECIFIC to KD PROJECT =================
 # Remove all cells that are not in the "0" cluster
 merged_obj <- subset(merged_obj, cells = colnames(merged_obj)[merged_obj$seurat_clusters == "0"])
 cat(length(colnames(merged_obj)), " cells remain after subsetting to cluster 0", "\n")
-# Plot total counts by batch
+merged_obj$seurat_clusters <- NULL
+
+# Plot total counts by batch again, but only for cells in cluster 0
 batch_counts <- data.frame(
     batch = merged_obj$batch,
     nCount = merged_obj$nCount_Spatial.008um
@@ -25,7 +27,24 @@ p_counts <- ggplot(total_counts_by_batch, aes(x = reorder(batch, nCount), y = nC
     ) +
     NoLegend()
 ggsave(paste0(output_dirs$clustering, "batch_total_counts_only_on_cluster_0.pdf"), plot = p_counts)
+rm(batch_counts, total_counts_by_batch, p_counts)
 
+# re-cluster on the remaining cells
+merged_obj <- FindNeighbors(
+    merged_obj,
+    assay = target_assay,
+    reduction = "PCA",
+    dims = 1:30,
+    k.param = Cluster_n_neighbors
+) |>
+    FindClusters(cluster.name = "seurat_clusters") |>
+    RunUMAP(
+        reduction = "PCA",
+        reduction.name = "umap",
+        return.model = TRUE,
+        dims = 1:30,
+        n.components = 3
+    )
 # ================= SPECIFIC to KD PROJECT =================
 
 
@@ -36,7 +55,7 @@ ggsave(paste0(output_dirs$clustering, "batch_total_counts_only_on_cluster_0.pdf"
 #      visualization of all cells clustering
 # ===========================================
 #  plots UMAP in 2D
-Seurat::DefaultAssay(merged_obj) <- ifelse(VisiumHD, "sketch", "Spatial")
+Seurat::DefaultAssay(merged_obj) <- target_assay
 Seurat::Idents(merged_obj) <- "seurat_clusters"
 p1 <- Seurat::DimPlot(merged_obj, cols = color_map, reduction = "umap", label = F) +
     ggtitle("Sketched clustering") +
@@ -90,8 +109,11 @@ if (VisiumHD) {
 # ======================================
 merged_obj_list <- SplitObject(merged_obj, split.by = "batch")
 
+spatial_dimplots <- list()
+
 for (batch_id in batch_names) {
-    output.batch <- paste0(output_dirs$clustering_umap_spatial, batch_id, "/")
+    # output.batch <- paste0(output_dirs$clustering_umap_spatial, batch_id, "/")
+    output.batch <- output_dirs$clustering_umap_spatial
     if (!dir.exists(output.batch)) {
         dir.create(output.batch, recursive = TRUE)
     }
@@ -133,13 +155,12 @@ for (batch_id in batch_names) {
         one_subset <- Seurat::DietSeurat(one_subset, assays = "sketch")
     }
 
-    p3 <- Seurat::SpatialDimPlot(one_subset,
+    spatial_dimplots[[batch_id]] <- Seurat::SpatialDimPlot(one_subset,
         group.by = "seurat_clusters",
         cols = color_map, alpha = 0.7, image.alpha = 0.7,
         label = T, repel = T,
         label.size = 4, pt.size.factor = ifelse(VisiumHD, 4, 1.6)
     ) + ggtitle("cluster by SNN")
-    ggsave(paste0(output.batch, "clusters_spatial_", batch_id, ".pdf"), plot = p3)
 
 
     #######################
@@ -158,6 +179,12 @@ for (batch_id in batch_names) {
         plotly::layout(paper_bgcolor = "black", plot_bgcolor = "black", font = list(color = "white")) |>
         htmlwidgets::saveWidget(paste0(output.batch, "clusters_spatial_sketch_", batch_id, ".html"))
 }
+
+ggpubr::ggexport(
+    spatial_dimplots,
+    filename = paste0(output_dirs$clustering_umap_spatial, output.file.prefix, "_clusters_spatial.pdf"),
+    width = 10, height = 10,
+)
 
 cat("=====================================\n")
 cat("Done visualization\n")
