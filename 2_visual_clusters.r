@@ -62,7 +62,7 @@ data.frame(
     cell = Cells(merged_sub_obj),
     cluster = merged_sub_obj$seurat_clusters
 ) |>
-    write.csv(paste0(output_dirs$clustering, "seurat_clusters_no_noiseSpots.csv"))
+    write.csv(paste0(output_dirs$clustering, "seurat_clusters_no_noiseSpots.csv"), row.names = FALSE)
 
 merged_obj <- merged_sub_obj
 rm(merged_sub_obj)

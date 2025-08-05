@@ -67,10 +67,10 @@ BayesSpace_k_clusters: 14
 # below parameters will be used in the script
 cluster_method: "seurat_clusters_no_noiseSpots"
 Differential_Gene_Analysis:
-  outTumour_cluster_nums: [1, 6]
+  outTumour_cluster_nums: [1, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
   inTumour_cluster_nums: [0]
-  edgeTumour_cluster_nums: [2, 8]
-  
+  edgeTumour_cluster_nums: [2, 3]
+
   across_batch_comparisons: # the latter one is the control group
     - ["Run1_KD", "Run1_SAL"]
     - ["Run1_RAD", "Run1_SAL"]
@@ -148,6 +148,7 @@ html_reports_dir: "/vol/research/scratch1/NOBACKUP/hh01116/10X_KD/KD_output/html
 cellbrowser:
   # Cluster file paths for Cell Browser export, no need to prefix ./output/
   cluster_files:
+    seurat_clusters_no_noiseSpots: "/vol/research/scratch1/NOBACKUP/hh01116/10X_KD/KD_output/clustering/seurat_clusters_no_noiseSpots.csv"
     banksy_cellTypes: "/vol/research/scratch1/NOBACKUP/hh01116/10X_KD/KD_output/clustering/banksy_cluster_cell2location.csv"
     banksy: "/vol/research/scratch1/NOBACKUP/hh01116/10X_KD/KD_output/clustering/banksy_cluster.csv" 
     BayesSpace: "/vol/research/scratch1/NOBACKUP/hh01116/10X_KD/KD_output/clustering/BayesSpace_cluster.csv"

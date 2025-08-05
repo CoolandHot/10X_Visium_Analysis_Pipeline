@@ -192,3 +192,4 @@ local_report:
       pdf_pattern: "{output_dir}/{batch}_nmf_analysis_spatial_density.pdf"
       layout_rows: 3
       layout_cols: 2
+

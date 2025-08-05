@@ -9,7 +9,7 @@ cell_type_df <- read.csv(cell_type_abundance_path, row.names = 1)
 cluster_csv_path <- paste0(output_dirs$clustering, cluster_method, ".csv")
 if (file.exists(cluster_csv_path)) {
     cluster_data <- read.csv(cluster_csv_path, row.names = 1)
-    cluster_vec <- setNames(cluster_data[[1]], rownames(cluster_data))
+    # cluster_vec <- setNames(cluster_data[[1]], rownames(cluster_data))
 } else {
     stop(paste("Cluster method", cluster_method, "not found in CSV."))
 }
@@ -20,6 +20,23 @@ cell_type_df$region <- dplyr::case_when(
     cluster_data[rownames(cell_type_df), 1] %in% outTumour_cluster_nums_vector ~ "outTumour",
     cluster_data[rownames(cell_type_df), 1] %in% edgeTumour_cluster_nums_vector ~ "edgeTumour",
     TRUE ~ NA_character_
+)
+
+# Inspect the inTumour, outTumour, and edgeTumour proportions over all cells
+# Plot batch-region counts as a stacked bar plot
+batch_region_table <- table(cell_type_df$batch, cell_type_df$region)
+batch_region_df <- as.data.frame(batch_region_table)
+colnames(batch_region_df) <- c("batch", "region", "count")
+
+p1 <- ggplot(batch_region_df, aes(x = batch, y = count, fill = region)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Cell Counts by Batch and Region", x = "Batch", y = "Cell Count") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave(p1,
+    filename = paste0(output_dirs$clustering, "cell_counts_by_batch_and_region.pdf"),
+    width = 8, height = 5
 )
 
 # Export cell type data for each region as a whole
@@ -158,7 +175,7 @@ library(ggplot2)
 library(reshape2)
 library(plotly)
 
-config_yaml <- yaml::read_yaml("./cellType/config.yaml")
+config_yaml <- yaml::read_yaml("config/cellType_config.yaml")
 combine_cell_types <- config_yaml$shared$combine_cell_types
 cell_type_combinations <- config_yaml$shared$cell_type_combinations
 
