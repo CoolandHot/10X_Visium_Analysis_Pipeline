@@ -5,46 +5,67 @@ merged_obj <- readRDS(paste0(rds_data_dir, output.file.prefix, "_merged_clustere
 target_assay <- ifelse(VisiumHD, "sketch", "Spatial")
 
 # ================= SPECIFIC to KD PROJECT =================
-# Remove all cells that are not in the "0" cluster
-merged_obj <- subset(merged_obj, cells = colnames(merged_obj)[merged_obj$seurat_clusters == "0"])
-cat(length(colnames(merged_obj)), " cells remain after subsetting to cluster 0", "\n")
-merged_obj$seurat_clusters <- NULL
+# 1. Remove noise spots from the merged object
+# 2. Re-cluster the remaining cells in cluster "0" (the spots that have cells)
+# 3. Save the re-clustered object without noise spots
+no_noise_subset_path <- paste0(rds_data_dir, "KD_3Runs_merged_no_noiseSpots", "_merged.rds")
+if (file.exists(no_noise_subset_path)) {
+    cat("Loading merged object without noise spots (only cells previously in Cluster0)\n")
+    merged_sub_obj <- readRDS(no_noise_subset_path)
+} else {
+    # Remove all cells that are not in the "0" cluster
+    merged_sub_obj <- subset(merged_obj, cells = colnames(merged_obj)[merged_obj$seurat_clusters == "0"])
+    cat(length(colnames(merged_sub_obj)), " cells remain after subsetting to cluster 0", "\n")
+    merged_sub_obj$seurat_clusters <- NULL
 
-# Plot total counts by batch again, but only for cells in cluster 0
-batch_counts <- data.frame(
-    batch = merged_obj$batch,
-    nCount = merged_obj$nCount_Spatial.008um
-)
-total_counts_by_batch <- aggregate(nCount ~ batch, data = batch_counts, sum)
-p_counts <- ggplot(total_counts_by_batch, aes(x = reorder(batch, nCount), y = nCount, fill = batch)) +
-    geom_bar(stat = "identity") +
-    theme_minimal() +
-    labs(title = "Total counts by batch (only on cluster 0)", x = "Batch", y = "Total counts") +
-    theme(
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text(hjust = 0.5)
-    ) +
-    NoLegend()
-ggsave(paste0(output_dirs$clustering, "batch_total_counts_only_on_cluster_0.pdf"), plot = p_counts)
-rm(batch_counts, total_counts_by_batch, p_counts)
-
-# re-cluster on the remaining cells
-merged_obj <- FindNeighbors(
-    merged_obj,
-    assay = target_assay,
-    reduction = "PCA",
-    dims = 1:30,
-    k.param = Cluster_n_neighbors
-) |>
-    FindClusters(cluster.name = "seurat_clusters") |>
-    RunUMAP(
-        reduction = "PCA",
-        reduction.name = "umap",
-        return.model = TRUE,
-        dims = 1:30,
-        n.components = 3
+    # Plot total counts by batch again, but only for cells in cluster 0
+    batch_counts <- data.frame(
+        batch = merged_sub_obj$batch,
+        nCount = merged_sub_obj$nCount_Spatial.008um
     )
+    total_counts_by_batch <- aggregate(nCount ~ batch, data = batch_counts, sum)
+    p_counts <- ggplot(total_counts_by_batch, aes(x = reorder(batch, nCount), y = nCount, fill = batch)) +
+        geom_bar(stat = "identity") +
+        theme_minimal() +
+        labs(title = "Total counts by batch (only on cluster 0)", x = "Batch", y = "Total counts") +
+        theme(
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            plot.title = element_text(hjust = 0.5),
+            plot.subtitle = element_text(hjust = 0.5)
+        ) +
+        NoLegend()
+    ggsave(paste0(output_dirs$clustering, "batch_total_counts_only_on_cluster_0.pdf"), plot = p_counts)
+    rm(batch_counts, total_counts_by_batch, p_counts)
+
+    # re-cluster on the remaining cells
+    merged_sub_obj <- FindNeighbors(
+        merged_sub_obj,
+        assay = target_assay,
+        reduction = "PCA",
+        dims = 1:30,
+        k.param = 30
+    ) |>
+        FindClusters(cluster.name = "seurat_clusters", resolution = 0.3) |>
+        RunUMAP(
+            reduction = "PCA",
+            reduction.name = "umap",
+            return.model = TRUE,
+            dims = 1:30,
+            n.components = 3
+        )
+
+    saveRDS(merged_sub_obj, no_noise_subset_path)
+}
+
+# export cluster results to csv
+data.frame(
+    cell = Cells(merged_sub_obj),
+    cluster = merged_sub_obj$seurat_clusters
+) |>
+    write.csv(paste0(output_dirs$clustering, "seurat_clusters_no_noiseSpots.csv"))
+
+merged_obj <- merged_sub_obj
+rm(merged_sub_obj)
 # ================= SPECIFIC to KD PROJECT =================
 
 
@@ -160,7 +181,7 @@ for (batch_id in batch_names) {
         cols = color_map, alpha = 0.7, image.alpha = 0.7,
         label = T, repel = T,
         label.size = 4, pt.size.factor = ifelse(VisiumHD, 4, 1.6)
-    ) + ggtitle("cluster by SNN")
+    ) + ggtitle(paste0("cluster by SNN in ", batch_id))
 
 
     #######################
@@ -170,7 +191,7 @@ for (batch_id in batch_names) {
     st_location <- Seurat::GetTissueCoordinates(one_subset)[names(idents), ]
     st_location$cell <- NULL
     plotly::plot_ly(
-        x = st_location[, 1], y = st_location[, 2],
+        x = st_location[, 2], y = -st_location[, 1],
         type = "scatter", mode = "markers",
         color = idents,
         colors = color_map,
@@ -181,9 +202,8 @@ for (batch_id in batch_names) {
 }
 
 ggpubr::ggexport(
-    spatial_dimplots,
-    filename = paste0(output_dirs$clustering_umap_spatial, output.file.prefix, "_clusters_spatial.pdf"),
-    width = 10, height = 10,
+    plotlist = spatial_dimplots,
+    filename = paste0(output_dirs$clustering_umap_spatial, output.file.prefix, "_clusters_spatial.pdf")
 )
 
 cat("=====================================\n")

@@ -86,7 +86,7 @@ cluster_labelling_env$plotly_spatial_plot <- function(seurat_obj, batch_id, mark
 
     # Plot marker expression
     plot1 <- plotly::plot_ly(
-        x = st_location[, 1], y = st_location[, 2],
+        x = st_location[, 2], y = -st_location[, 1],
         type = "scatter", mode = "markers",
         color = marker_expr,
         marker = list(size = 5)
@@ -102,7 +102,7 @@ cluster_labelling_env$plotly_spatial_plot <- function(seurat_obj, batch_id, mark
     st_location <- Seurat::GetTissueCoordinates(seurat_obj)[names(idents), ]
     st_location$cell <- NULL
     plot2 <- plotly::plot_ly(
-        x = st_location[, 1], y = st_location[, 2],
+        x = st_location[, 2], y = -st_location[, 1],
         type = "scatter", mode = "markers",
         color = idents,
         colors = color_map,

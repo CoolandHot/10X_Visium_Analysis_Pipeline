@@ -3,8 +3,8 @@
 # -------------------
 VisiumHD: True
 on_disk:
-  Cluster_resolution: 2
-  Cluster_n_neighbors: 20
+  Cluster_resolution: 0.3
+  Cluster_n_neighbors: 30
   max_memory_gb: 45
   qc_min_genes: 100 # Minimum number of genes expressed in a cell
   qc_min_cells: 10 # Minimum number of cells for a gene to be considered expressed
@@ -16,7 +16,7 @@ rds_data_dir: "/scratch/hh01116/10X_KD/KD_rds_data/" # otter12
 # Directory to save processed data and results
 project_dir: "/scratch/hh01116/10X_KD/" # otter12
 # Prefix for the output files
-output_file_prefix: "KD_3Runs_merged"
+output_file_prefix: "KD_3Runs_merged_no_noiseSpots"
 # Names of the batch files (directories for VisiumHD, h5 files for standard Visium)
 batch_file_h5_names: # for non-VisiumHD
 batch_file_names:
@@ -65,11 +65,11 @@ BayesSpace_k_clusters: 14
 # 5. ./DGE/*
 # There is DGE on the inferred cell type abundance in the above Step3. here, the first two steps are for the cluster level DGE analysis on the gene expression.
 # below parameters will be used in the script
-cluster_method: "banksy_cluster_cell2location"
+cluster_method: "seurat_clusters_no_noiseSpots"
 Differential_Gene_Analysis:
-  outTumour_cluster_nums: [2, 6]
-  inTumour_cluster_nums: [1, 4, 5]
-  edgeTumour_cluster_nums: []
+  outTumour_cluster_nums: [1, 6]
+  inTumour_cluster_nums: [0]
+  edgeTumour_cluster_nums: [2, 8]
   
   across_batch_comparisons: # the latter one is the control group
     - ["Run1_KD", "Run1_SAL"]
