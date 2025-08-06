@@ -175,8 +175,8 @@ class CellBrowserExporter:
         max_y_shift = all_coords[:, 1].max()
 
         # Define shifts based on number of batches
-        if 2 <= n_batches <= 8:
-            # Determine grid size (cols, rows) for up to 8 batches
+        if 2 <= n_batches <= 16:
+            # Determine grid size (cols, rows) for up to 16 batches
             grid_sizes = {
                 2: (2, 1),
                 3: (2, 2),
@@ -185,6 +185,14 @@ class CellBrowserExporter:
                 6: (3, 2),
                 7: (4, 2),
                 8: (4, 2),
+                9: (3, 3),
+                10: (4, 3),
+                11: (4, 3),
+                12: (4, 3),
+                13: (4, 4),
+                14: (4, 4),
+                15: (4, 4),
+                16: (4, 4),
             }
             n_cols, n_rows = grid_sizes[n_batches]
             shifts = {}
@@ -193,7 +201,7 @@ class CellBrowserExporter:
                 col = i % n_cols
                 shifts[batch_name] = [col * max_x_shift * 1.05, row * max_y_shift * -1.05]
         else:
-            raise ValueError(f"Only 2-8 batches are supported, got {n_batches}")
+            raise ValueError(f"Only 2-16 batches are supported, got {n_batches}")
 
         # Apply shifts to coordinates
         shifted_coords = adata_copy.obsm["spatial"].copy()
