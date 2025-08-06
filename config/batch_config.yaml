@@ -67,7 +67,7 @@ BayesSpace_k_clusters: 14
 # below parameters will be used in the script
 cluster_method: "seurat_clusters_no_noiseSpots"
 Differential_Gene_Analysis:
-  outTumour_cluster_nums: [1, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+  outTumour_cluster_nums: [1, 4, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
   inTumour_cluster_nums: [0]
   edgeTumour_cluster_nums: [2, 3]
 
@@ -75,12 +75,15 @@ Differential_Gene_Analysis:
     - ["Run1_KD", "Run1_SAL"]
     - ["Run1_RAD", "Run1_SAL"]
     - ["Run1_COMB", "Run1_SAL"]
+    - ["Run1_COMB", "Run1_RAD"]
     - ["Run2_KD", "Run2_SAL"]
     - ["Run2_RAD", "Run2_SAL"]
     - ["Run2_COMB", "Run2_SAL"]
+    - ["Run2_COMB", "Run2_RAD"]
     - ["Run3_KD", "Run3_SAL"]
     - ["Run3_RAD", "Run3_SAL"]
     - ["Run3_COMB", "Run3_SAL"]
+    - ["Run3_COMB", "Run3_RAD"]
 
 
 
