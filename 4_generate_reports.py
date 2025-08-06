@@ -32,29 +32,12 @@ class ReportGenerator:
         self.edgeTumour_clusters = dge.get('edgeTumour_cluster_nums', [])
         
         self.output_dirs = self.config.get('output_dirs', {})
-        self.default_dirs = {
-            'clustering_umap_spatial': 'output/clustering/clusters_umap_spatial/',
-            'clustering_markers': 'output/clustering/markers/',
-            'clustering_spatialAware': 'output/clustering/spatial_aware_clustering/',
-            'cell_type_spacexr': 'output/cell_type_prediction/spaceXR_results/',
-            'cell_type_cell2loc': 'output/cell_type_prediction/cell2location_results/',
-            'deg_celltypes': 'output/differential_expression/cell_type_comparisons',
-            'deg_combine_celltypes': 'output/differential_expression/combine_cell_type_comparisons',
-            'deg_clusters': 'output/differential_expression/cluster_comparisons',
-            'pathway_analysis_clusters': 'output/pathway_analysis_clusters/',
-            'pathway_analysis_clusters_plots': 'output/pathway_analysis_clusters/plots/',
-            'pathway_analysis_celltypes': 'output/pathway_analysis_celltypes/',
-            'pathway_analysis_celltypes_plots': 'output/pathway_analysis_celltypes/plots/',
-            'pathway_analysis_combine_celltypes': 'output/pathway_analysis_combine_celltypes/',
-            'pathway_analysis_combine_celltypes_plots': 'output/pathway_analysis_combine_celltypes/plots/',
-            'tfa_activities': 'output/transcription_factor_activity/TF_activities/',
-            'tfa_features': 'output/transcription_factor_activity/feature_importance/',
-            'tfa_heatmaps': 'output/transcription_factor_activity/heatmaps/',
-        }
+        if not self.output_dirs:
+            raise ValueError("No output directories found in configuration. Please check your config file.")
     
     def _get_dir(self, key):
         """Get output dir from config or default"""
-        return self.output_dirs.get(key, self.default_dirs[key])
+        return self.output_dirs.get(key, {})
 
     def _load_config(self, config_path):
         """Load configuration file"""
@@ -70,7 +53,7 @@ class ReportGenerator:
     
     def _copy_visualization_tools(self):
         """Copy visualization tools to html_reports directory if not exists, excluding specific files."""
-        viz_tools_src = self.project_dir.parent / "visualisation_tools"
+        viz_tools_src = Path(self.output_dirs.get('visual_tools_dir', '../visualisation_tools'))
         viz_tools_dest = self.html_reports_dir / "visualisation_tools"
         
         if viz_tools_src.exists() and not viz_tools_dest.exists():
@@ -201,7 +184,15 @@ class ReportGenerator:
                 "title": "Interactive Visualizations",
                 "description": "Interactive HTML plots for cluster exploration",
                 "pattern": "**/*.html",
-                "subdirs": [self._get_dir('clustering_spatialAware')],
+                "subdirs": [self._get_dir('clustering_spatialAware'), self._get_dir('clustering_umap_spatial')],
+                "exclude_subdirs": [],
+                "exclude_patterns": []
+            },
+            {
+                "title": "QC inspection plots",
+                "description": "Quality control plots for inspecting clustering results.",
+                "pattern": "*.pdf",
+                "subdirs": [self._get_dir('clustering')],
                 "exclude_subdirs": [],
                 "exclude_patterns": []
             },
@@ -209,9 +200,17 @@ class ReportGenerator:
                 "title": "Spatial-Aware Clustering",
                 "description": "Clustering results using BANKSY and BayesSpace methods. For files starting with 'Cell2Location_*', they are clustered based the inferred cell type abundance from Cell2Location, while the rest are clustered based the gene expression.",
                 "pattern": "**/*.pdf",
-                "subdirs": [self._get_dir('clustering_spatialAware')],
+                "subdirs": [self._get_dir('clustering_spatialAware'), self._get_dir('deg_celltypes'), self._get_dir('deg_combine_celltypes'), self._get_dir('deg_clusters')],
                 "exclude_subdirs": [],
-                "exclude_patterns": []
+                "exclude_patterns": ["inspection_plots_pdf", "within_sample", "across_sample", "_proportion_"]
+            },
+            {
+                "title": "Spatial-Aware Clustering data",
+                "description": "",
+                "pattern": "*.csv",
+                "subdirs": [self._get_dir('deg_celltypes'), self._get_dir('deg_combine_celltypes'), self._get_dir('deg_clusters')],
+                "exclude_subdirs": [],
+                "exclude_patterns": ["inspection_plots_pdf", "within_sample", "across_sample", "_proportion_", "merged_dge_"]
             },
             {
                 "title": "SNN Clustering (Seurat GNN, traditional leiden method)",
@@ -237,12 +236,13 @@ class ReportGenerator:
                 "title": "Cell2Location Predictions",
                 "description": "Cell type abundance maps and spatial distributions from Cell2Location analysis.\nFor the index.html of cellbrowser, you need to open it with a web server backend.",
                 "pattern": "**/*.html",
-                "subdirs": ['output/differential_expression/cell_type_comparisons', str(self.cellbrowser_html_output_dir)],
+                "subdirs": ['output/differential_expression/cell_type_comparisons', str(self.cellbrowser_html_output_dir), self._get_dir('deg_celltypes'),
+                    self._get_dir('deg_combine_celltypes')],
                 "exclude_subdirs": [],
                 "exclude_patterns": []
             },
             {
-                "title": "Cell Abundance Data",
+                "title": "Cell Abundance csv",
                 "description": "Quantitative cell type abundance matrices and cluster assignments",
                 "pattern": "**/*.csv",
                 "subdirs": [
@@ -251,6 +251,17 @@ class ReportGenerator:
                 ],
                 "exclude_subdirs": ["output/cell_type_prediction/cell2location_results/nmf_analysis"],
                 "exclude_patterns": ["**/n_fact*.csv"]
+            },
+            {
+                "title": "Cell Abundance proportions",
+                "description": "",
+                "pattern": "**/*.pdf",
+                "subdirs": [
+                    self._get_dir('deg_celltypes'),
+                    self._get_dir('deg_combine_celltypes')
+                ],
+                "exclude_subdirs": [],
+                "exclude_patterns": ["within_sample", "across_sample"]
             },
             {
                 "title": "SpaceXR Predictions",
@@ -286,7 +297,7 @@ class ReportGenerator:
             {
                 "title": f"Within-/Cross-Sample {data_name} {'Combined' if is_combined else ''} Data{combined_title_suffix}",
                 "description": f"Differential comparison between sample groups ({data_cross_desc}, etc.); within-sample comparisons ({data_within_desc}, etc.){combined_desc_suffix}",
-                "pattern": "**/merged_*.csv",
+                "pattern": "*.csv",
                 "subdirs": [base_dir], "exclude_subdirs": [], "exclude_patterns": []
             },
             # Within-Sample
@@ -1441,7 +1452,8 @@ class ReportGenerator:
                 except Exception:
                     continue
             for expat in exclude_patterns:
-                if expat and path.match(expat):
+                # Changed: match pattern as substring in path string
+                if expat and expat in path.as_posix():
                     return True
             return False
 

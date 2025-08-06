@@ -124,6 +124,7 @@ output_dirs:
   pathway_analysis_celltypes_plots: "/vol/research/scratch1/NOBACKUP/hh01116/10X_KD/KD_output/pathway_analysis_celltypes/plots/"
   pathway_analysis_combine_celltypes: "/vol/research/scratch1/NOBACKUP/hh01116/10X_KD/KD_output/pathway_analysis_combine_celltypes/"
   pathway_analysis_combine_celltypes_plots: "/vol/research/scratch1/NOBACKUP/hh01116/10X_KD/KD_output/pathway_analysis_combine_celltypes/plots/"
+  visual_tools_dir: "/vol/research/scratch1/NOBACKUP/hh01116/visualisation_tools/"
 
 
   # Transcription factor activity outputs
