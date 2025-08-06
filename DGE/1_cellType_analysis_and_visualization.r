@@ -42,6 +42,7 @@ ggsave(p1,
 # Export cell type data for each region as a whole
 for (region in c("inTumour", "outTumour", "edgeTumour")) {
     region_df <- cell_type_df[cell_type_df$region == region, ]
+    region_df <- region_df[complete.cases(region_df), ]
     write.csv(
         region_df,
         file = paste0(output_dirs$deg_celltypes, region, "_cellTypes.csv"),
@@ -61,6 +62,7 @@ if (file.exists(cell_type_abundance_combined_path)) {
     )
     for (region in c("inTumour", "outTumour", "edgeTumour")) {
         region_combined <- combine_celltype[combine_celltype$region == region, ]
+        region_combined <- region_combined[complete.cases(region_combined), ]
         write.csv(
             region_combined,
             file = paste0(output_dirs$deg_combine_celltypes, region, "_cellTypes_combined.csv"),
