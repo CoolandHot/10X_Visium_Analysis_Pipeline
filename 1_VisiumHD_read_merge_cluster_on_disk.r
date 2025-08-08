@@ -19,16 +19,6 @@ message("=== Reading and Preprocessing Batches ===")
 target_assay <- ifelse(VisiumHD, "sketch", "Spatial")
 assay_name <- ifelse(VisiumHD, "Spatial.008um", "Spatial")
 
-low_count_threshold <- 50000
-
-batch_counts_df <- data.frame(
-    batch = character(),
-    total_counts = numeric(),
-    n_cells = numeric(),
-    low_counts = logical(),
-    stringsAsFactors = FALSE
-)
-
 filter.genes.cells <- function(obj, min.value, min.cells, min.genes) {
     data.slot <- Seurat::GetAssayData(obj, layer = "counts")
     num.cells <- Matrix::rowSums(data.slot >= min.value)
@@ -82,99 +72,8 @@ for (i in seq_along(batch_file_names)) {
         gbm_subset[[assay_name]]$counts <- BPCells::open_matrix_dir(dir = counts_dir)
         saveRDS(gbm_subset, rds_path)
     }
-
-    # --- Inspect counts ---
-    total_counts <- sum(Matrix::colSums(Seurat::GetAssayData(gbm_subset, layer = "counts")))
-    n_cells <- ncol(gbm_subset)
-    is_low_count <- total_counts < low_count_threshold
-    batch_counts_df <- rbind(batch_counts_df, data.frame(
-        batch = prefix,
-        total_counts = total_counts,
-        n_cells = n_cells,
-        low_counts = is_low_count
-    ))
     gc()
 }
-
-p_counts <- ggplot(batch_counts_df, aes(x = reorder(batch, total_counts), y = total_counts)) +
-    geom_col(aes(fill = low_counts), alpha = 0.8) +
-    geom_hline(yintercept = low_count_threshold, linetype = "dashed", color = "red", alpha = 0.7) +
-    scale_fill_manual(
-        values = c("FALSE" = "steelblue", "TRUE" = "orange"),
-        labels = c("Normal", "Low counts"), name = "Count Status"
-    ) +
-    scale_y_continuous(labels = scales::comma_format()) +
-    labs(
-        title = "Total Counts per Batch",
-        subtitle = paste("Red dashed line indicates low count threshold (", scales::comma(low_count_threshold), ")"),
-        x = "Batch", y = "Total Counts"
-    ) +
-    theme_minimal() +
-    theme(
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text(hjust = 0.5)
-    ) +
-    geom_text(aes(label = paste0(scales::comma(total_counts), "\n(", scales::comma(n_cells), " cells)")),
-        hjust = 0.5, size = 3, angle = 0
-    )
-ggsave(paste0(output_dirs$clustering, "batch_total_counts.pdf"), p_counts, width = 12, height = 8)
-message("Saved total counts visualization to: ", paste0(output_dirs$clustering, "batch_total_counts.pdf"))
-
-
-# ===========================================
-#           Mitochondrial QC Analysis
-# ===========================================
-message("=== Mitochondrial QC Analysis ===")
-plot_mitochondrial_qc <- function(batch_names, rds_data_dir, output_dirs) {
-    mito_qc_list <- list()
-    for (batch_name in batch_names) {
-        gbm_subset <- readRDS(paste0(rds_data_dir, batch_name, "_raw.rds"))
-        mito_genes <- grep("^[Mm][Tt]-", rownames(gbm_subset), value = TRUE)
-        if (length(mito_genes) > 0) {
-            gbm_subset <- PercentageFeatureSet(gbm_subset, pattern = "^[Mm][Tt]-|^MT-", col.name = "percent.mt", assay = assay_name)
-            mito_qc_list[[batch_name]] <- data.frame(
-                batch = batch_name,
-                cell_id = colnames(gbm_subset),
-                percent_mt = gbm_subset$percent.mt,
-                n_genes = ifelse(VisiumHD, gbm_subset$nFeature_Spatial.008um, gbm_subset$nFeature_Spatial),
-                n_counts = ifelse(VisiumHD, gbm_subset$nCount_Spatial.008um, gbm_subset$nCount_Spatial)
-            )
-        } else {
-            mito_qc_list[[batch_name]] <- data.frame(
-                batch = batch_name,
-                cell_id = character(0),
-                percent_mt = numeric(0),
-                n_genes = numeric(0),
-                n_counts = numeric(0)
-            )
-        }
-    }
-    mito_qc_df <- do.call(rbind, mito_qc_list)
-    if (nrow(mito_qc_df) > 0) {
-        p_mito <- ggplot(mito_qc_df, aes(x = batch, y = percent_mt, fill = batch)) +
-            geom_violin(alpha = 0.7) +
-            geom_boxplot(width = 0.1, fill = "white", alpha = 0.8) +
-            labs(
-                title = "Mitochondrial Gene Expression Percentage by Batch",
-                subtitle = "Use this plot to determine mitochondrial cutoff threshold",
-                x = "Batch", y = "Mitochondrial Gene %"
-            ) +
-            theme_minimal() +
-            theme(
-                axis.text.x = element_text(angle = 45, hjust = 1),
-                plot.title = element_text(hjust = 0.5),
-                plot.subtitle = element_text(hjust = 0.5),
-                legend.position = "none"
-            ) +
-            geom_hline(yintercept = c(10, 20, 30), linetype = "dashed", alpha = 0.5, color = "red")
-        ggsave(paste0(output_dirs$clustering, "mitochondrial_qc_by_batch.pdf"), p_mito, width = 12, height = 8)
-        return(mito_qc_df)
-    } else {
-        return(NULL)
-    }
-}
-mito_qc_data <- plot_mitochondrial_qc(batch_names, rds_data_dir, output_dirs)
 
 integrated_merged_obj_path <- paste0(rds_data_dir, output.file.prefix, "_merged.rds")
 if (file.exists(integrated_merged_obj_path)) {
